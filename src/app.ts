@@ -1,6 +1,6 @@
 import express from 'express';
 import * as userController from './controllers/userController';
-import * as gizzController from './controllers/gizzController';
+import * as gizzController from './controllers/gizzzController';
 
 const app = express();
 const PORT = 8080;

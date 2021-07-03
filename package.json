@@ -1,0 +1,28 @@
+{
+  "name": "gizzbe",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/app.js",
+  "scripts": {
+    "dev": "tsc && nodemon dist/app.js -e ts,js,json --exec \"npm run start\" --ignore ./dist",
+    "start": "tsc && node dist/app.js",
+    "lint": "npx eslint --cache \"**/*.{js,ts}\" --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^4.17.12",
+    "@typescript-eslint/eslint-plugin": "^4.28.1",
+    "@typescript-eslint/parser": "^4.28.1",
+    "eslint": "^7.30.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "nodemon": "^2.0.9",
+    "prettier": "^2.3.2",
+    "typescript": "^3.3.3"
+  },
+  "dependencies": {
+    "express": "^4.16.4"
+  }
+}

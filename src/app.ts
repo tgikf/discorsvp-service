@@ -1,8 +1,8 @@
 import express from 'express';
+import * as dotenv from 'dotenv';
 import * as userController from './controllers/userController';
 import * as gizzzController from './controllers/gizzzController';
 import DiscBot from './discord/DiscBot';
-import * as dotenv from 'dotenv';
 
 dotenv.config();
 const app = express();

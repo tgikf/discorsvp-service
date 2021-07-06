@@ -1,75 +1,102 @@
 import DiscChannel from '../discord/DiscChannel';
+import GizzzStatus from './GizzzStatus';
+import GizzzType from './GizzzType';
 
 export default class Gizzz {
-    private squad: { member: string; hasJoined: boolean }[] = [];
-    private others: string[] = []; //array to store people who join the channel without accepting (in case they join first and accept later)
-
     constructor(
-        private _owner: string,
+        private _status: GizzzStatus,
+        private _ownerId: string,
         private _channel: DiscChannel,
         private target: number,
+        private squad: { memberId: string; hasJoined: boolean }[],
+        private others: string[],
         private audience?: string[],
-    ) {}
+    ) {
+        if (squad.length === 0) {
+            // initialize only when the Gizzz is created (i.e. first instantiation)
+            this._status = GizzzStatus.Pending;
+            this.addSquadMember(this._ownerId);
+        }
+    }
 
     get owner(): string {
-        return this._owner;
+        return this._ownerId;
     }
 
     get channel(): DiscChannel {
         return this._channel;
     }
 
-    public processEvent(join: boolean, channel: DiscChannel, user: string): void {
-        if (join) {
-            if (join && !this.isComplete && this.isInAudience(user) && this.channel === channel) {
-                this.addSquadMember(user);
-            } else {
-                this.addOthersMember(user);
-            }
-        } else {
-            if (!join && this.isSquadMember(user)) {
-                this.removeSquadMember(user);
-            } else {
-                this.remmoveOthersMember(user);
-            }
-        }
-        if (this.isComplete()) {
-            console.log('Gizzz completed!', this);
-        }
+    get status(): GizzzStatus {
+        return this._status;
     }
 
     public isComplete(): boolean {
+        return this.status === GizzzStatus.Complete;
+    }
+
+    public serialize(): GizzzType {
+        return {
+            status: this._status,
+            owner: this._ownerId,
+            channel: this._channel,
+            target: this.target,
+            audience: this.audience,
+            squad: this.squad,
+            others: this.others,
+        };
+    }
+
+    public isInAudience(userId: string): boolean {
         return (
-            this.isSquadMember(this.owner) &&
-            this.squad.length === this.target &&
-            this.squad.find((m) => m.hasJoined === false) === undefined
+            this.audience === undefined ||
+            this.audience.length === 0 ||
+            this.audience.find((u) => u === userId) !== undefined
         );
     }
 
-    private isInAudience(user: string): boolean {
-        return this.audience === undefined || this.audience.indexOf(user) >= 0;
+    public isSquadMember(memberId: string): boolean {
+        return this.squad.find((u) => u.memberId === memberId) !== undefined;
     }
 
-    private isSquadMember(member: string): boolean {
-        return this.squad.find((u) => u.member === member) !== undefined;
+    public addSquadMember(memberId: string): void {
+        let hasJoined = false;
+        if (this.isOthersMember(memberId)) {
+            hasJoined = true;
+            this.removeOthersMember(memberId);
+        }
+        this.squad.push({ memberId, hasJoined });
+        this.updateStatus();
     }
 
-    private addSquadMember(member: string): void {
-        this.squad.push({ member, hasJoined: false });
+    public updateSquadMember(memberId: string, hasJoined: boolean): void {
+        const i = this.squad.findIndex((m) => (m.memberId = memberId));
+        this.squad[i] = { memberId, hasJoined };
+        this.updateStatus();
     }
 
-    private removeSquadMember(member: string): void {
-        this.squad = this.squad.filter((e) => e.member !== member);
+    public removeSquadMember(memberId: string): void {
+        this.squad = this.squad.filter((e) => e.memberId !== memberId);
     }
 
-    private isOthersMember(member: string): boolean {
-        return this.others.find((m) => m === member) !== undefined;
-    }
-    private addOthersMember(member: string): void {
-        this.others.push(member);
+    public addOthersMember(memberId: string): void {
+        this.others.push(memberId);
     }
 
-    private remmoveOthersMember(member: string): void {
-        this.others = this.others.filter((e) => e !== member);
+    public removeOthersMember(memberId: string): void {
+        this.others = this.others.filter((e) => e !== memberId);
+    }
+
+    private updateStatus(): void {
+        if (
+            this.isSquadMember(this.owner) &&
+            this.squad.length === this.target &&
+            this.squad.find((m) => m.hasJoined === false) === undefined
+        ) {
+            this._status = GizzzStatus.Complete;
+        }
+    }
+    private isOthersMember(memberId: string): boolean {
+        return this.others.find((m) => m === memberId) !== undefined;
     }
 }

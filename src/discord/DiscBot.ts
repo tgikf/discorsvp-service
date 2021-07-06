@@ -1,5 +1,6 @@
 import Discord, { Channel, VoiceChannel } from 'discord.js';
-import { processGizzzEvent } from '../controllers/gizzzController';
+import { processDiscordEvent } from '../controllers/gizzzController';
+import DiscChannel from './DiscChannel';
 
 export default class DiscBot {
     private client = new Discord.Client();
@@ -19,7 +20,7 @@ export default class DiscBot {
                 newState.member &&
                 newState.channelID !== oldState.channelID
             ) {
-                processGizzzEvent({
+                processDiscordEvent({
                     user: newState.member.id,
                     oldChannel: {
                         server: oldState.guild.id,
@@ -47,6 +48,10 @@ export default class DiscBot {
         });
 
         return serverMap;
+    }
+
+    public getUserIdsByChannel(channel: DiscChannel): string[] {
+        return ['abc'];
     }
 
     public getUserDisplayName(id: string): string | undefined {

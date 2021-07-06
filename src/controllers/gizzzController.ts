@@ -1,46 +1,35 @@
 import express from 'express';
-import { bot } from '../app';
-import Gizzz from '../gizzz/Gizzz';
 import DiscEvent from '../discord/DiscEvent';
+import GizzzDao from '../gizzz/GizzzDao';
 
 export const create = (req: express.Request, res: express.Response): void => {
-    const validateCreateRequest = (req: express.Request) => {
-        const { user, channel, target } = req.body;
-        if (target > 1 && bot.getUserDisplayName(user)) {
-            return { user, channel, target };
-        }
-    };
-
-    const body = validateCreateRequest(req);
-    if (body) {
-        const gizzz = new Gizzz(body.user, body.channel, body.target);
-        console.log(gizzz);
+    const { user, channel, target } = req.body;
+    if (user && channel && target) {
+        //TODO fill others with users already in channel at creation time
+        const gizzzId = GizzzDao.createGizzz(user, channel, target, []);
+        res.send({ status: 'success', gizzzId });
     } else {
         res.sendStatus(400);
     }
 };
 
-export const accept = (req: express.Request, res: express.Response): void => {
-    const validateAcceptRequest = (req: express.Request) => {
-        const { user, gizzzId } = req.body;
-        if (bot.getUserDisplayName(user)) {
-            return { user, gizzzId };
+export const accept = async (req: express.Request, res: express.Response): Promise<void> => {
+    const { user, gizzzId } = req.body;
+    if (user && gizzzId) {
+        if (await GizzzDao.acceptGizzz(user, gizzzId)) {
+            res.sendStatus(200);
+        } else {
+            res.sendStatus(400);
         }
-    };
-
-    const body = validateAcceptRequest(req);
-    if (body) {
-        console.log('gizzz accepted');
     } else {
         res.sendStatus(400);
     }
 };
 
-export const processGizzzEvent = (event: DiscEvent): void => {
-    //needs to loop through all gizzz and see if any squad memeber can be changed to hasJoined
+export const processDiscordEvent = (event: DiscEvent): void => {
     console.log(
-        `User ${bot.getUserDisplayName(event.user)} (${event.user}) moved from ${JSON.stringify(
-            event.oldChannel,
-        )} to ${JSON.stringify(event.newChannel)}}`,
+        `User ${event.user} moved from ${JSON.stringify(event.oldChannel)} to ${JSON.stringify(event.newChannel)}}`,
     );
+    GizzzDao.processDiscordEvent(false, event.oldChannel, event.user);
+    GizzzDao.processDiscordEvent(true, event.newChannel, event.user);
 };

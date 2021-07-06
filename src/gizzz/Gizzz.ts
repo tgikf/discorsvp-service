@@ -19,12 +19,11 @@ export default class Gizzz {
         }
     }
 
+    get gap(): number {
+        return this.target - this.squad.length;
+    }
     get owner(): string {
         return this._ownerId;
-    }
-
-    get channel(): DiscChannel {
-        return this._channel;
     }
 
     get status(): GizzzStatus {
@@ -32,7 +31,7 @@ export default class Gizzz {
     }
 
     public isComplete(): boolean {
-        return this.status === GizzzStatus.Complete;
+        return this._status === GizzzStatus.Complete;
     }
 
     public serialize(): GizzzType {
@@ -70,7 +69,7 @@ export default class Gizzz {
     }
 
     public updateSquadMember(memberId: string, hasJoined: boolean): void {
-        const i = this.squad.findIndex((m) => (m.memberId = memberId));
+        const i = this.squad.findIndex((m) => m.memberId === memberId);
         this.squad[i] = { memberId, hasJoined };
         this.updateStatus();
     }

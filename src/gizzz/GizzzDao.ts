@@ -39,7 +39,6 @@ class GizzzDao {
     }
 
     public static async joinSquad(userId: string, gizzzId: string): Promise<boolean> {
-        console.log(gizzzId);
         const doc = await GizzzModel.findById(gizzzId).exec();
         if (doc) {
             const g = new Gizzz(doc.status, doc.owner, doc.channel, doc.target, doc.squad, doc.others, doc.audience);

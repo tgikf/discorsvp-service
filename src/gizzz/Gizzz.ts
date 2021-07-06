@@ -76,6 +76,9 @@ export default class Gizzz {
     }
 
     public removeSquadMember(memberId: string): void {
+        if (this.squad.find((m) => m.memberId === memberId)?.hasJoined) {
+            this.addOthersMember(memberId);
+        }
         this.squad = this.squad.filter((e) => e.memberId !== memberId);
     }
 

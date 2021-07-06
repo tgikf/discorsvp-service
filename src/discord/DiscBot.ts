@@ -1,5 +1,5 @@
 import Discord, { Channel, VoiceChannel } from 'discord.js';
-import { processDiscordEvent } from '../controllers/gizzzController';
+import GizzzDao from '../gizzz/GizzzDao';
 import DiscChannel from './DiscChannel';
 
 export default class DiscBot {
@@ -20,7 +20,7 @@ export default class DiscBot {
                 newState.member &&
                 newState.channelID !== oldState.channelID
             ) {
-                processDiscordEvent({
+                GizzzDao.discordEventListener({
                     user: newState.member.id,
                     oldChannel: {
                         server: oldState.guild.id,
@@ -50,8 +50,12 @@ export default class DiscBot {
         return serverMap;
     }
 
-    public getUserIdsByChannel(channel: DiscChannel): string[] {
-        return ['abc'];
+    public getUserIdsByChannel(channelId: DiscChannel): string[] {
+        const voiceStates = this.client.guilds.cache
+            .get(channelId.server)
+            ?.voiceStates.cache.filter((vs) => vs.channelID === channelId.channel);
+
+        return voiceStates?.map((vs) => vs.id) || [];
     }
 
     public getUserDisplayName(id: string): string | undefined {

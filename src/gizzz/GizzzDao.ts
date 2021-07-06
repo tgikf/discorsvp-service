@@ -4,6 +4,8 @@ import GizzzModel from '../model/GizzzModel';
 import mongoose from 'mongoose';
 import * as dotenv from 'dotenv';
 import GizzzStatus from './GizzzStatus';
+import DiscEvent from '../discord/DiscEvent';
+import { bot } from '../app';
 dotenv.config();
 
 class GizzzDao {
@@ -21,20 +23,22 @@ class GizzzDao {
         new GizzzDao();
     })();
 
-    public static createGizzz(
-        ownerUserId: string,
-        channel: DiscChannel,
-        target: number,
-        others: string[],
-        audience?: string[],
-    ): string {
-        const g = new Gizzz(GizzzStatus.Pending, ownerUserId, channel, target, [], others, audience);
+    public static createGizzz(ownerUserId: string, channel: DiscChannel, target: number, audience?: string[]): string {
+        const g = new Gizzz(
+            GizzzStatus.Pending,
+            ownerUserId,
+            channel,
+            target,
+            [],
+            bot.getUserIdsByChannel(channel),
+            audience,
+        );
         const doc = new GizzzModel(g.serialize());
         doc.save();
         return doc._id;
     }
 
-    public static async acceptGizzz(userId: string, gizzzId: string): Promise<boolean> {
+    public static async joinSquad(userId: string, gizzzId: string): Promise<boolean> {
         console.log(gizzzId);
         const doc = await GizzzModel.findById(gizzzId).exec();
         if (doc) {
@@ -48,7 +52,29 @@ class GizzzDao {
         return false;
     }
 
-    public static async processDiscordEvent(join: boolean, channel: DiscChannel, userId: string): Promise<void> {
+    public static async leaveSquad(userId: string, gizzzId: string): Promise<boolean> {
+        console.log(gizzzId);
+        const doc = await GizzzModel.findById(gizzzId).exec();
+        if (doc) {
+            const g = new Gizzz(doc.status, doc.owner, doc.channel, doc.target, doc.squad, doc.others, doc.audience);
+            if (g.status === GizzzStatus.Pending && g.isSquadMember(userId)) {
+                g.removeSquadMember(userId);
+                await GizzzDao.updateGizzz(gizzzId, g);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static discordEventListener(event: DiscEvent): void {
+        console.log(
+            `User ${event.user} moved from ${JSON.stringify(event.oldChannel)} to ${JSON.stringify(event.newChannel)}}`,
+        );
+        GizzzDao.processDiscordEvent(false, event.oldChannel, event.user);
+        GizzzDao.processDiscordEvent(true, event.newChannel, event.user);
+    }
+
+    private static async processDiscordEvent(join: boolean, channel: DiscChannel, userId: string): Promise<void> {
         const doc = await GizzzModel.findOne({ channel: channel }).exec();
         if (doc) {
             const g = new Gizzz(doc.status, doc.owner, doc.channel, doc.target, doc.squad, doc.others, doc.audience);

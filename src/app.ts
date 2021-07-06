@@ -19,7 +19,8 @@ app.get(API_BASE_PATH + '/user/:id/channels', userController.getChannels);
 app.get(API_BASE_PATH + '/user/:id/rating', userController.getRating);
 
 app.post(API_BASE_PATH + '/gizzz/create', gizzzController.create);
-app.post(API_BASE_PATH + '/gizzz/accept', gizzzController.accept);
+app.post(API_BASE_PATH + '/gizzz/join', gizzzController.join);
+app.post(API_BASE_PATH + '/gizzz/leave', gizzzController.leave);
 
 app.listen(PORT, () => {
     console.log(`Server started at http://localhost:${PORT}`);

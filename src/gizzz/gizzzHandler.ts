@@ -6,6 +6,7 @@ import * as dotenv from 'dotenv';
 import GizzzStatus from './GizzzStatus';
 import DiscEvent from '../discord/DiscEvent';
 import { bot } from '../app';
+import GizzzType from './GizzzType';
 dotenv.config();
 
 mongoose
@@ -85,7 +86,18 @@ const processDiscordEvent = async (join: boolean, channel: DiscChannel, userId: 
     }
 };
 
-export const updateGizzz = async (gizzzId: string, g: Gizzz): Promise<void> => {
+export const getGizzByUserId = async (userId: string): Promise<false | GizzzType> => {
+    const doc = await GizzzModel.findOne({ owner: userId });
+    if (doc) {
+        const g = new Gizzz(doc.status, doc.owner, doc.channel, doc.target, doc.squad, doc.others, doc.audience);
+        if (g.status === GizzzStatus.Pending) {
+            return g.serialize();
+        }
+    }
+    return false;
+};
+
+const updateGizzz = async (gizzzId: string, g: Gizzz): Promise<void> => {
     const doc = await GizzzModel.findOneAndUpdate({ _id: gizzzId }, g.serialize());
     doc.save();
 };

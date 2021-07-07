@@ -1,8 +1,10 @@
 import express from 'express';
 import { createGizzz, joinSquad, leaveSquad } from '../gizzz/gizzzHandler';
+import { getUserAndId } from './utils';
 
 export const create = (req: express.Request, res: express.Response): void => {
-    const { user, channel, target } = req.body;
+    const { channel, target } = req.body;
+    const { user } = getUserAndId(req);
     if (user && channel && target) {
         const gizzzId = createGizzz(user, channel, target);
         res.send({ status: 'success', gizzzId });
@@ -12,7 +14,7 @@ export const create = (req: express.Request, res: express.Response): void => {
 };
 
 export const join = async (req: express.Request, res: express.Response): Promise<void> => {
-    const { user, gizzzId } = req.body;
+    const { user, gizzzId } = getUserAndId(req);
     if (user && gizzzId) {
         if (await joinSquad(user, gizzzId)) {
             res.sendStatus(200);

@@ -1,18 +1,8 @@
 import GizzzModel from '../model/GizzzModel';
 import { discordEventListener, joinSquad, leaveSquad } from './gizzzHandler';
 
-jest.mock('../model/GizzzModel');
-
-beforeAll(() => {
-    jest.setTimeout(3 * 60 * 1000);
-});
-
-beforeEach(() => {
-    jest.clearAllMocks();
-});
-
-describe('GizzzDao', () => {
-    GizzzModel.findById = jest.fn().mockImplementation(() => {
+jest.mock('../model/GizzzModel', () => ({
+    findById: jest.fn().mockImplementation(() => {
         return {
             exec: () => {
                 return {
@@ -27,9 +17,8 @@ describe('GizzzDao', () => {
                 };
             },
         };
-    });
-
-    GizzzModel.findOne = jest.fn().mockImplementation(() => {
+    }),
+    findOne: jest.fn().mockImplementation(() => {
         return {
             exec: () => {
                 return {
@@ -47,16 +36,21 @@ describe('GizzzDao', () => {
                 };
             },
         };
-    });
-
-    GizzzModel.findOneAndUpdate = jest.fn().mockImplementation(() => {
+    }),
+    findOneAndUpdate: jest.fn().mockImplementation(() => {
         return {
             save: () => {
                 return;
             },
         };
-    });
+    }),
+}));
 
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
+describe('GizzzDao', () => {
     /*it('creates gizzz correctly', async () => {
         const id = await GizzzDao.createGizzz('owner', { server: 'abc', channel: 'def' }, 11, []);
 

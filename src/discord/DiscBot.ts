@@ -1,5 +1,5 @@
 import Discord, { Channel, VoiceChannel } from 'discord.js';
-import GizzzDao from '../gizzz/GizzzDao';
+import { discordEventListener } from '../gizzz/gizzzHandler';
 import DiscChannel from './DiscChannel';
 
 export default class DiscBot {
@@ -20,7 +20,7 @@ export default class DiscBot {
                 newState.member &&
                 newState.channelID !== oldState.channelID
             ) {
-                GizzzDao.discordEventListener({
+                discordEventListener({
                     user: newState.member.id,
                     oldChannel: {
                         server: oldState.guild.id,

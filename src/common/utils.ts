@@ -5,8 +5,12 @@ import ResStatus from '../controllers/ResStatus';
 
 export const bot = new DiscBot();
 
+export const parseDiscUserId = (raw: string): string => {
+    return raw.substr(15);
+};
+
 export const getUserAndId = (req: express.Request): { user: string; gizzzId: string } => {
-    return { user: req.oidc.user?.sub.substr(15), gizzzId: req.params.id };
+    return { user: parseDiscUserId(req.oidc.user?.sub), gizzzId: req.params.id };
 };
 
 export const getChannels = (): { server: string; channels: string[] }[] => {

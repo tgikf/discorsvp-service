@@ -9,6 +9,7 @@ import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import * as utils from './common/utils';
+import { parseDiscUserId } from './common/utils';
 
 dotenv.config();
 
@@ -53,7 +54,7 @@ export const io = new Server(httpServer, {
 });
 io.on('connection', (socket: Socket) => {
     socket.on('clientInfo', (discUserId: string) => {
-        utils.addClient(discUserId, socket);
+        utils.addClient(discUserId.sub.toString(), socket);
     });
 });
 

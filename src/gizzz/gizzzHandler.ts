@@ -5,8 +5,9 @@ import mongoose from 'mongoose';
 import * as dotenv from 'dotenv';
 import GizzzStatus from './GizzzStatus';
 import DiscEvent from '../discord/DiscEvent';
-import { bot } from '../app';
+//import { io } from '../app';
 import GizzzType from './GizzzType';
+import * as utils from '../common/utils';
 dotenv.config();
 
 mongoose
@@ -24,7 +25,7 @@ export const createGizzz = (ownerUserId: string, channel: DiscChannel, target: n
         channel,
         target,
         [],
-        bot.getUserIdsByChannel(channel),
+        utils.bot.getUserIdsByChannel(channel),
         audience,
     );
     const doc = new GizzzModel(g.serialize());
@@ -62,11 +63,18 @@ export const discordEventListener = async (event: DiscEvent): Promise<void> => {
     console.log(
         `User ${event.user} moved from ${JSON.stringify(event.oldChannel)} to ${JSON.stringify(event.newChannel)}}`,
     );
-    processDiscordEvent(false, event.oldChannel, event.user);
-    processDiscordEvent(true, event.newChannel, event.user);
+    await processDiscordEvent(false, event.oldChannel, event.user);
+    const completedGizzzId = await processDiscordEvent(true, event.newChannel, event.user);
+    if (completedGizzzId) {
+        utils.getClient(event.user)?.volatile.emit('GizzzComplete', completedGizzzId);
+    }
 };
 
-const processDiscordEvent = async (join: boolean, channel: DiscChannel, userId: string): Promise<void> => {
+const processDiscordEvent = async (
+    join: boolean,
+    channel: DiscChannel,
+    userId: string,
+): Promise<string | undefined> => {
     const doc = await GizzzModel.findOne({ channel: channel }).exec();
     if (doc) {
         const g = new Gizzz(doc.status, doc.owner, doc.channel, doc.target, doc.squad, doc.others, doc.audience);
@@ -81,9 +89,10 @@ const processDiscordEvent = async (join: boolean, channel: DiscChannel, userId: 
             await updateGizzz(doc._id, g);
         }
         if (g.status === GizzzStatus.Complete) {
-            console.log('GIZZ COMPLETE LETS FUCKING GO');
+            return doc._id;
         }
     }
+    return;
 };
 
 export const getGizzByUserId = async (userId: string): Promise<false | GizzzType> => {

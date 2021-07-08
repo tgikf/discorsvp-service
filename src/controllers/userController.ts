@@ -1,5 +1,6 @@
 import express from 'express';
-import * as utils from './utils';
+import * as utils from '../common/utils';
+import ResStatus from './ResStatus';
 
 export const getChannels = (req: express.Request, res: express.Response): void => {
     const channels = utils.getChannels();

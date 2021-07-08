@@ -1,6 +1,7 @@
 import express from 'express';
 import { createGizzz, joinSquad, leaveSquad } from '../gizzz/gizzzHandler';
-import * as utils from './utils';
+import * as utils from '../common/utils';
+import ResStatus from './ResStatus';
 
 export const create = (req: express.Request, res: express.Response): void => {
     const { channel, target } = req.body;

@@ -3,10 +3,12 @@ import * as dotenv from 'dotenv';
 import * as userController from './controllers/userController';
 import * as gizzzController from './controllers/gizzzController';
 import * as appController from './controllers/appController';
-import DiscBot from './discord/DiscBot';
 import cors from 'cors';
 import { auth } from 'express-openid-connect';
 import cookieParser from 'cookie-parser';
+import { createServer } from 'http';
+import { Server, Socket } from 'socket.io';
+import * as utils from './common/utils';
 
 dotenv.config();
 
@@ -23,7 +25,11 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const API_BASE_PATH = '/api';
 
-app.use(cors());
+app.use(
+    cors({
+        origin: process.env.SPA_URL,
+    }),
+);
 app.use(auth(authConfig));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -37,8 +43,20 @@ app.post(API_BASE_PATH + '/gizzz/create', gizzzController.create);
 app.post(API_BASE_PATH + '/gizzz/:id/join', gizzzController.join);
 app.post(API_BASE_PATH + '/gizzz/:id/leave', gizzzController.leave);
 
-app.listen(PORT, () => {
-    console.log(`Server started at http://localhost:${PORT}`);
+//app can't be used after this anymore
+const httpServer = createServer(app);
+export const io = new Server(httpServer, {
+    cors: {
+        origin: process.env.SPA_URL,
+        methods: ['GET', 'POST'],
+    },
+});
+io.on('connection', (socket: Socket) => {
+    socket.on('clientInfo', (discUserId: string) => {
+        utils.addClient(discUserId, socket);
+    });
 });
 
-export const bot = new DiscBot();
+httpServer.listen(PORT, () => {
+    console.log(`API Server started at http://localhost:${PORT}`);
+});

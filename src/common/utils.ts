@@ -6,7 +6,7 @@ import ResStatus from '../controllers/ResStatus';
 export const bot = new DiscBot();
 
 export const parseDiscUserId = (raw: string): string => {
-    return raw.substr(15);
+    return raw ? raw.substr(15) : '';
 };
 
 export const getUserAndId = (req: express.Request): { user: string; gizzzId: string } => {

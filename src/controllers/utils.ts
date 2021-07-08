@@ -12,3 +12,10 @@ export const getChannels = (): { server: string; channels: string[] }[] => {
     });
     return channels;
 };
+
+export const getResponse = (
+    status: ResStatus,
+    data?: unknown,
+): { status: ResStatus; data: unknown[] } | { status: ResStatus; data: [] } => {
+    return data ? { status, data: [data] } : { status, data: [] };
+};

@@ -11,7 +11,7 @@ import cookieParser from 'cookie-parser';
 dotenv.config();
 
 const authConfig = {
-    authRequired: true,
+    authRequired: false,
     auth0Logout: true,
     secret: process.env.AUTH0_SECRET,
     baseURL: 'http://localhost:' + process.env.PORT,
@@ -29,14 +29,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+app.get(API_BASE_PATH + '/user/current', appController.getHome);
 app.get(API_BASE_PATH + '/user/channels', userController.getChannels);
 app.get(API_BASE_PATH + '/user/rating', userController.getRating);
 
 app.post(API_BASE_PATH + '/gizzz/create', gizzzController.create);
 app.post(API_BASE_PATH + '/gizzz/:id/join', gizzzController.join);
 app.post(API_BASE_PATH + '/gizzz/:id/leave', gizzzController.leave);
-
-app.get('*', appController.getHome);
 
 app.listen(PORT, () => {
     console.log(`Server started at http://localhost:${PORT}`);

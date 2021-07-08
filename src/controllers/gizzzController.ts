@@ -1,20 +1,20 @@
 import express from 'express';
 import { createGizzz, joinSquad, leaveSquad } from '../gizzz/gizzzHandler';
-import { getUserAndId } from './utils';
+import * as utils from './utils';
 
 export const create = (req: express.Request, res: express.Response): void => {
     const { channel, target } = req.body;
-    const { user } = getUserAndId(req);
+    const { user } = utils.getUserAndId(req);
     if (user && channel && target) {
         const gizzzId = createGizzz(user, channel, target);
-        res.send({ status: 'success', gizzzId });
+        res.send(utils.getResponse(ResStatus.Success, gizzzId));
     } else {
-        res.sendStatus(400);
+        res.send(utils.getResponse(ResStatus.Empty));
     }
 };
 
 export const join = async (req: express.Request, res: express.Response): Promise<void> => {
-    const { user, gizzzId } = getUserAndId(req);
+    const { user, gizzzId } = utils.getUserAndId(req);
     if (user && gizzzId) {
         if (await joinSquad(user, gizzzId)) {
             res.sendStatus(200);

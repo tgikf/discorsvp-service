@@ -18,19 +18,27 @@ mongoose
     .catch((e) => console.log('mongoose connection failed', e));
 mongoose.set('useFindAndModify', false);
 
-export const createGizzz = (ownerUserId: string, channel: DiscChannel, target: number, audience?: string[]): string => {
-    const g = new Gizzz(
-        GizzzStatus.Pending,
-        ownerUserId,
-        channel,
-        target,
-        [],
-        utils.bot.getUserIdsByChannel(channel),
-        audience,
-    );
-    const doc = new GizzzModel(g.serialize());
-    doc.save();
-    return doc._id;
+export const createGizzz = (
+    ownerUserId: string,
+    channel: DiscChannel,
+    target: number,
+    audience?: string[],
+): string | undefined => {
+    if (!getGizzByUserId(ownerUserId)) {
+        const g = new Gizzz(
+            GizzzStatus.Pending,
+            ownerUserId,
+            channel,
+            target,
+            [],
+            utils.bot.getUserIdsByChannel(channel),
+            audience,
+        );
+        const doc = new GizzzModel(g.serialize());
+        doc.save();
+        return doc._id;
+    }
+    return undefined;
 };
 
 export const joinSquad = async (userId: string, gizzzId: string): Promise<boolean> => {
@@ -64,9 +72,11 @@ export const discordEventListener = async (event: DiscEvent): Promise<void> => {
         `User ${event.user} moved from ${JSON.stringify(event.oldChannel)} to ${JSON.stringify(event.newChannel)}}`,
     );
     await processDiscordEvent(false, event.oldChannel, event.user);
-    const completedGizzzId = await processDiscordEvent(true, event.newChannel, event.user);
-    if (completedGizzzId) {
-        utils.getClient(event.user)?.volatile.emit('GizzzComplete', completedGizzzId);
+    if (event.newChannel) {
+        const completedGizzzId = await processDiscordEvent(true, event.newChannel, event.user);
+        if (completedGizzzId) {
+            utils.getClient(event.user)?.volatile.emit('GizzzComplete', completedGizzzId);
+        }
     }
 };
 

@@ -7,7 +7,11 @@ export const create = async (req: express.Request, res: express.Response): Promi
     const { user, channel, target } = req.body;
     if (user && channel && target) {
         const gizzzId = await createGizzz(user, channel, target);
-        res.send(utils.getResponse(ResStatus.Success, gizzzId));
+        if (gizzzId) {
+            res.send(utils.getResponse(ResStatus.Success, gizzzId));
+        } else {
+            res.send(422);
+        }
     } else {
         res.send(utils.getResponse(ResStatus.Empty));
     }
@@ -20,7 +24,7 @@ export const join = async (req: express.Request, res: express.Response): Promise
         if (await joinSquad(user, gizzzId)) {
             res.sendStatus(200);
         } else {
-            res.sendStatus(400);
+            res.sendStatus(422);
         }
     } else {
         res.sendStatus(400);
@@ -33,7 +37,7 @@ export const leave = async (req: express.Request, res: express.Response): Promis
         if (await leaveSquad(user, gizzzId)) {
             res.sendStatus(200);
         } else {
-            res.sendStatus(400);
+            res.sendStatus(422);
         }
     } else {
         res.sendStatus(400);

@@ -14,22 +14,19 @@ export default class DiscBot {
 
         //https://discord.js.org/#/docs/main/master/class/VoiceState
         this.client.on('voiceStateUpdate', (oldState, newState) => {
-            if (
-                newState.channelID &&
-                oldState.channelID &&
-                newState.member &&
-                newState.channelID !== oldState.channelID
-            ) {
+            if (oldState.channelID && oldState.member && newState.channelID !== oldState.channelID) {
+                const newChannel =
+                    newState.guild.id && newState.channelID
+                        ? { server: newState.guild.id, channel: newState.channelID }
+                        : undefined;
+
                 discordEventListener({
-                    user: newState.member.id,
+                    user: oldState.member.id,
                     oldChannel: {
                         server: oldState.guild.id,
                         channel: oldState.channelID,
                     },
-                    newChannel: {
-                        server: newState.guild.id,
-                        channel: newState.channelID,
-                    },
+                    newChannel,
                 });
             }
         });

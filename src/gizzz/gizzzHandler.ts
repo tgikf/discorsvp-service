@@ -24,7 +24,7 @@ export const createGizzz = async (
     target: number,
     audience?: string[],
 ): Promise<string | undefined> => {
-    if (!(await getGizzByUserId(ownerUserId))) {
+    if (!(await getCurrentGizzz(ownerUserId))) {
         const g = new Gizzz(
             GizzzStatus.Pending,
             ownerUserId,
@@ -107,13 +107,13 @@ const processDiscordEvent = async (
     return;
 };
 
-export const getGizzByUserId = async (userId: string): Promise<false | GizzzType> => {
-    const doc = await GizzzModel.findOne({ owner: userId });
+export const getCurrentGizzz = async (userId: string): Promise<false | GizzzType> => {
+    const doc = await GizzzModel.findOne({ owner: userId, status: 0 });
     if (doc) {
         const g = new Gizzz(doc.status, doc.owner, doc.channel, doc.target, doc.squad, doc.others, doc.audience);
-        if (g.status === GizzzStatus.Pending) {
-            return g.serialize();
-        }
+        //if (g.status === GizzzStatus.Pending) {
+        return g.serialize();
+        //}
     }
     return false;
 };

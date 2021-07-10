@@ -39,7 +39,7 @@ app.get(API_BASE_PATH + '/online', (req, res) => {
     res.sendStatus(200);
 });
 
-app.get(API_BASE_PATH + '/user/:id/current', appController.getHome);
+app.get(API_BASE_PATH + '/user/:id/home', appController.getHome);
 app.get(API_BASE_PATH + '/user/:id/channels', userController.getChannels);
 app.get(API_BASE_PATH + '/user/:id/rating', userController.getRating);
 

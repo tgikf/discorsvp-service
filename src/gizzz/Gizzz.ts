@@ -10,6 +10,7 @@ export default class Gizzz {
         private target: number,
         private squad: { memberId: string; hasJoined: boolean }[],
         private others: string[],
+        private _id?: string,
         private audience?: string[],
     ) {
         if (squad.length === 0) {
@@ -30,12 +31,17 @@ export default class Gizzz {
         return this._status;
     }
 
+    set status(status: GizzzStatus) {
+        this._status = status;
+    }
+
     public isComplete(): boolean {
         return this._status === GizzzStatus.Complete;
     }
 
     public serialize(): GizzzType {
         return {
+            _id: this._id,
             status: this._status,
             owner: this._ownerId,
             channel: this._channel,

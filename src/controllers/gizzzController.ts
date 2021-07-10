@@ -1,5 +1,5 @@
 import express from 'express';
-import { createGizzz, joinSquad, leaveSquad } from '../gizzz/gizzzHandler';
+import { cancelGizzz, createGizzz, joinSquad, leaveSquad } from '../gizzz/gizzzHandler';
 import * as utils from '../common/utils';
 import ResStatus from './ResStatus';
 
@@ -32,9 +32,23 @@ export const join = async (req: express.Request, res: express.Response): Promise
 };
 
 export const leave = async (req: express.Request, res: express.Response): Promise<void> => {
-    const { user, gizzzId } = req.body;
+    const gizzzId = req.params.id;
+    const user = req.body.user;
     if (user && gizzzId) {
         if (await leaveSquad(user, gizzzId)) {
+            res.sendStatus(200);
+        } else {
+            res.sendStatus(422);
+        }
+    } else {
+        res.sendStatus(400);
+    }
+};
+
+export const cancel = async (req: express.Request, res: express.Response): Promise<void> => {
+    const gizzzId = req.params.id;
+    if (gizzzId) {
+        if (await cancelGizzz(gizzzId)) {
             res.sendStatus(200);
         } else {
             res.sendStatus(422);

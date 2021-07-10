@@ -66,6 +66,7 @@ describe('Gizzz', () => {
             4,
             [],
             [],
+            'randomId',
             ['abc', 'def'],
         );
         expect(g.isInAudience('abc')).toBeTruthy();
@@ -81,9 +82,11 @@ describe('Gizzz', () => {
             12,
             [{ memberId: 'memba', hasJoined: true }],
             [],
+            'randomId',
             ['abc', 'def'],
         );
         expect(g.serialize()).toEqual({
+            _id: 'randomId',
             status: GizzzStatus.Cancelled,
             owner: 'owner',
             channel: { server: 'srv', channel: 'cnl' },

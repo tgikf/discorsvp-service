@@ -5,7 +5,6 @@ import mongoose from 'mongoose';
 import * as dotenv from 'dotenv';
 import GizzzStatus from './GizzzStatus';
 import DiscEvent from '../discord/DiscEvent';
-//import { io } from '../app';
 import GizzzType from './GizzzType';
 import * as utils from '../common/utils';
 dotenv.config();
@@ -17,6 +16,9 @@ mongoose
     })
     .catch((e) => console.log('mongoose connection failed', e));
 mongoose.set('useFindAndModify', false);
+
+const gizzzFactory = (doc: GizzzType): Gizzz =>
+    new Gizzz(doc.status, doc.owner, doc.channel, doc.target, doc.squad, doc.others, doc._id, doc.audience);
 
 export const createGizzz = async (
     ownerUserId: string,
@@ -32,10 +34,11 @@ export const createGizzz = async (
             target,
             [],
             utils.bot.getUserIdsByChannel(channel),
+            undefined,
             audience,
         );
         const doc = new GizzzModel(g.serialize());
-        doc.save();
+        await doc.save();
         return doc._id;
     }
     return undefined;
@@ -44,7 +47,7 @@ export const createGizzz = async (
 export const joinSquad = async (userId: string, gizzzId: string): Promise<boolean> => {
     const doc = await GizzzModel.findById(gizzzId).exec();
     if (doc) {
-        const g = new Gizzz(doc.status, doc.owner, doc.channel, doc.target, doc.squad, doc.others, doc.audience);
+        const g = gizzzFactory(doc);
         if (g.status === GizzzStatus.Pending && g.isInAudience(userId) && !g.isSquadMember(userId)) {
             g.addSquadMember(userId);
             await updateGizzz(gizzzId, g);
@@ -57,9 +60,22 @@ export const joinSquad = async (userId: string, gizzzId: string): Promise<boolea
 export const leaveSquad = async (userId: string, gizzzId: string): Promise<boolean> => {
     const doc = await GizzzModel.findById(gizzzId).exec();
     if (doc) {
-        const g = new Gizzz(doc.status, doc.owner, doc.channel, doc.target, doc.squad, doc.others, doc.audience);
+        const g = gizzzFactory(doc);
         if (g.status === GizzzStatus.Pending && g.isSquadMember(userId)) {
             g.removeSquadMember(userId);
+            await updateGizzz(gizzzId, g);
+            return true;
+        }
+    }
+    return false;
+};
+
+export const cancelGizzz = async (gizzzId: string): Promise<boolean> => {
+    const doc = await GizzzModel.findById(gizzzId).exec();
+    if (doc) {
+        const g = gizzzFactory(doc);
+        if (g.status !== GizzzStatus.Complete) {
+            g.status = GizzzStatus.Cancelled;
             await updateGizzz(gizzzId, g);
             return true;
         }
@@ -89,7 +105,7 @@ const processDiscordEvent = async (
 ): Promise<string | undefined> => {
     const doc = await GizzzModel.findOne({ channel: channel }).exec();
     if (doc) {
-        const g = new Gizzz(doc.status, doc.owner, doc.channel, doc.target, doc.squad, doc.others, doc.audience);
+        const g = gizzzFactory(doc);
         if (g.status === GizzzStatus.Pending) {
             if (g.isSquadMember(userId)) {
                 g.updateSquadMember(userId, join);
@@ -113,12 +129,36 @@ export const getGizzzHomeView = async (userId: string): Promise<false | GizzzTyp
     1. own, pending gizzz
     2. others' pending gizzz joined
     3. others' pending gizzz not joined
-    3. last own completed gizzz
+    3. last own non-pending gizzz
     */
     const result = [];
-    const own = await GizzzModel.findOne({ owner: userId, status: 0 });
-    if (own) {
-        const g = new Gizzz(own.status, own.owner, own.channel, own.target, own.squad, own.others, own.audience);
+    const op = await GizzzModel.findOne({ owner: userId, status: 0 });
+    if (op) {
+        const g = gizzzFactory(op);
+        result.push(g.serialize());
+    }
+
+    const pj = await GizzzModel.findOne({ status: 0, owner: { $ne: userId }, 'squad.member': userId });
+    if (pj) {
+        const g = gizzzFactory(pj);
+        result.push(g.serialize());
+    }
+
+    const pnjList: GizzzType[] = await GizzzModel.find({
+        status: 0,
+        owner: { $ne: userId },
+        'squad.member': { $ne: userId },
+    });
+    if (pnjList.length > 0) {
+        pnjList.forEach((pnj) => {
+            const g = gizzzFactory(pnj);
+            result.push(g.serialize());
+        });
+    }
+
+    const oc = await GizzzModel.findOne({ owner: userId, status: { $ne: 0 } });
+    if (oc) {
+        const g = new Gizzz(oc.status, oc.owner, oc.channel, oc.target, oc.squad, oc.others, oc.audience);
         result.push(g.serialize());
     }
 

@@ -13,6 +13,7 @@ jest.mock('../model/GizzzModel', () => ({
                     target: 999,
                     squad: [{ memberId: 'mocksquadmember', hasJoined: false }],
                     others: [],
+                    id: '',
                     audience: ['abc'],
                 };
             },

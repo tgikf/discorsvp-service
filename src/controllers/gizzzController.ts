@@ -10,7 +10,7 @@ export const create = async (req: express.Request, res: express.Response): Promi
         if (gizzzId) {
             res.send(utils.getResponse(ResStatus.Success, gizzzId));
         } else {
-            res.send(422);
+            res.sendStatus(422);
         }
     } else {
         res.send(utils.getResponse(ResStatus.Empty));

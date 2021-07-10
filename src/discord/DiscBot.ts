@@ -14,20 +14,32 @@ export default class DiscBot {
 
         //https://discord.js.org/#/docs/main/master/class/VoiceState
         this.client.on('voiceStateUpdate', (oldState, newState) => {
-            if (oldState.channelID && oldState.member && newState.channelID !== oldState.channelID) {
-                const newChannel =
-                    newState.guild.id && newState.channelID
-                        ? { server: newState.guild.id, channel: newState.channelID }
-                        : undefined;
+            /*
+            cases to cover:
+            - connect straight to channel: oldState undefined
+            - disconnect from channel: newState undefined
+            - switch channel: old and new defined
+            cases to ignore:
+            - mute/unmute: old channel === new channel
+            */
+            if (oldState.channelID !== newState.channelID) {
+                const oldC = oldState.channelID
+                    ? { server: oldState.guild.id, channel: oldState.channelID }
+                    : undefined;
+                const newC = newState.channelID
+                    ? { server: newState.guild.id, channel: newState.channelID }
+                    : undefined;
 
-                discordEventListener({
-                    user: oldState.member.id,
-                    oldChannel: {
-                        server: oldState.guild.id,
-                        channel: oldState.channelID,
-                    },
-                    newChannel,
-                });
+                const memberId =
+                    oldState.member !== null && oldState.member.id ? oldState.member.id : newState?.member?.id;
+
+                if (memberId) {
+                    discordEventListener({
+                        user: memberId,
+                        oldChannel: oldC,
+                        newChannel: newC,
+                    });
+                }
             }
         });
     }

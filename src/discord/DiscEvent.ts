@@ -2,7 +2,7 @@ import DiscChannel from './DiscChannel';
 
 type DiscEvent = {
     user: string;
-    oldChannel: DiscChannel;
+    oldChannel: DiscChannel | undefined;
     newChannel: DiscChannel | undefined;
 };
 

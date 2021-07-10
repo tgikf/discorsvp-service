@@ -18,13 +18,13 @@ mongoose
     .catch((e) => console.log('mongoose connection failed', e));
 mongoose.set('useFindAndModify', false);
 
-export const createGizzz = (
+export const createGizzz = async (
     ownerUserId: string,
     channel: DiscChannel,
     target: number,
     audience?: string[],
-): string | undefined => {
-    if (!getGizzByUserId(ownerUserId)) {
+): Promise<string | undefined> => {
+    if (!(await getGizzByUserId(ownerUserId))) {
         const g = new Gizzz(
             GizzzStatus.Pending,
             ownerUserId,
@@ -71,7 +71,9 @@ export const discordEventListener = async (event: DiscEvent): Promise<void> => {
     console.log(
         `User ${event.user} moved from ${JSON.stringify(event.oldChannel)} to ${JSON.stringify(event.newChannel)}}`,
     );
-    await processDiscordEvent(false, event.oldChannel, event.user);
+    if (event.oldChannel) {
+        await processDiscordEvent(false, event.oldChannel, event.user);
+    }
     if (event.newChannel) {
         const completedGizzzId = await processDiscordEvent(true, event.newChannel, event.user);
         if (completedGizzzId) {

@@ -8,6 +8,11 @@ export const parseDiscUserId = (raw: string): string => {
     return raw ? raw.substr(15) : '';
 };
 
+export const getAuthenticatedUser = (token: string): string => {
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    return parseDiscUserId(decoded.sub);
+};
+
 export const getChannels = (): { server: string; channels: string[] }[] => {
     const channels: { server: string; channels: string[] }[] = [];
     Array.from(bot.getAllChannelIds()).map((e) => {

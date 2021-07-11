@@ -2,9 +2,11 @@ import express from 'express';
 import { cancelGizzz, createGizzz, joinSquad, leaveSquad } from '../gizzz/gizzzHandler';
 import * as utils from '../common/utils';
 import ResStatus from './ResStatus';
+import { getAuthenticatedUser } from '../common/utils';
 
 export const create = async (req: express.Request, res: express.Response): Promise<void> => {
-    const { user, channel, target } = req.body;
+    const user = req.headers.authorization ? getAuthenticatedUser(req.headers.authorization) : undefined;
+    const { channel, target } = req.body;
     if (user && channel && target) {
         const gizzzId = await createGizzz(user, channel, target);
         if (gizzzId) {
@@ -19,7 +21,7 @@ export const create = async (req: express.Request, res: express.Response): Promi
 
 export const join = async (req: express.Request, res: express.Response): Promise<void> => {
     const gizzzId = req.params.id;
-    const user = req.body.user;
+    const user = req.headers.authorization ? getAuthenticatedUser(req.headers.authorization) : undefined;
     if (user && gizzzId) {
         if (await joinSquad(user, gizzzId)) {
             res.sendStatus(200);
@@ -33,7 +35,7 @@ export const join = async (req: express.Request, res: express.Response): Promise
 
 export const leave = async (req: express.Request, res: express.Response): Promise<void> => {
     const gizzzId = req.params.id;
-    const user = req.body.user;
+    const user = req.headers.authorization ? getAuthenticatedUser(req.headers.authorization) : undefined;
     if (user && gizzzId) {
         if (await leaveSquad(user, gizzzId)) {
             res.sendStatus(200);
@@ -47,8 +49,9 @@ export const leave = async (req: express.Request, res: express.Response): Promis
 
 export const cancel = async (req: express.Request, res: express.Response): Promise<void> => {
     const gizzzId = req.params.id;
-    if (gizzzId) {
-        if (await cancelGizzz(gizzzId)) {
+    const user = req.headers.authorization ? getAuthenticatedUser(req.headers.authorization) : undefined;
+    if (gizzzId && user) {
+        if (await cancelGizzz(gizzzId, user)) {
             res.sendStatus(200);
         } else {
             res.sendStatus(422);

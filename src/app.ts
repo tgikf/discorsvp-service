@@ -9,22 +9,23 @@ import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import * as utils from './common/utils';
+import { jwtCheck } from './common/auth';
 
 dotenv.config();
+const PORT = process.env.PORT || 8080;
+const app = express();
+const API_BASE_PATH = '/api';
 
 const authConfig = {
     authRequired: false,
     auth0Logout: true,
     secret: process.env.AUTH0_SECRET,
-    baseURL: 'http://localhost:' + process.env.PORT,
+    baseURL: 'http://localhost:' + PORT,
     clientID: process.env.AUTH0_CLIENT_ID,
     issuerBaseURL: process.env.AUTH0_ISSUER_BASE,
 };
 
-const app = express();
-const PORT = process.env.PORT || 8080;
-const API_BASE_PATH = '/api';
-
+app.use(jwtCheck);
 app.use(
     cors({
         origin: process.env.SPA_URL,
@@ -39,9 +40,9 @@ app.get(API_BASE_PATH + '/online', (req, res) => {
     res.sendStatus(200);
 });
 
-app.get(API_BASE_PATH + '/user/:id/home', appController.getHome);
-app.get(API_BASE_PATH + '/user/:id/channels', userController.getChannels);
-app.get(API_BASE_PATH + '/user/:id/rating', userController.getRating);
+app.get(API_BASE_PATH + '/user/home', appController.getHome);
+app.get(API_BASE_PATH + '/user/channels', userController.getChannels);
+app.get(API_BASE_PATH + '/user/rating', userController.getRating);
 
 app.post(API_BASE_PATH + '/gizzz/create', gizzzController.create);
 app.post(API_BASE_PATH + '/gizzz/:id/join', gizzzController.join);

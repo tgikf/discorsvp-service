@@ -70,11 +70,11 @@ export const leaveSquad = async (userId: string, gizzzId: string): Promise<boole
     return false;
 };
 
-export const cancelGizzz = async (gizzzId: string): Promise<boolean> => {
+export const cancelGizzz = async (gizzzId: string, userId: string): Promise<boolean> => {
     const doc = await GizzzModel.findById(gizzzId).exec();
     if (doc) {
         const g = gizzzFactory(doc);
-        if (g.status !== GizzzStatus.Complete) {
+        if (g.owner === userId && g.status !== GizzzStatus.Complete) {
             g.status = GizzzStatus.Cancelled;
             await updateGizzz(gizzzId, g);
             return true;

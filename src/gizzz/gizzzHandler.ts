@@ -26,7 +26,7 @@ export const createGizzz = async (
     target: number,
     audience?: string[],
 ): Promise<string | undefined> => {
-    if (!(await getGizzzHomeView(ownerUserId))) {
+    if (!(await GizzzModel.findOne({ owner: ownerUserId, status: 0 }))) {
         const g = new Gizzz(
             GizzzStatus.Pending,
             ownerUserId,

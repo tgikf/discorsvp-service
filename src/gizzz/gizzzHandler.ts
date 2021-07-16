@@ -91,18 +91,17 @@ export const discordEventListener = async (event: DiscEvent): Promise<void> => {
         await processDiscordEvent(false, event.oldChannel, event.user);
     }
     if (event.newChannel) {
-        const completedGizzzId = await processDiscordEvent(true, event.newChannel, event.user);
-        if (completedGizzzId) {
-            utils.getClient(event.user)?.volatile.emit('GizzzComplete', completedGizzzId);
+        const completedGizzz = await processDiscordEvent(true, event.newChannel, event.user);
+        if (completedGizzz) {
+            console.log('GizzzComplete', completedGizzz);
+            completedGizzz.squad.forEach((member) => {
+                utils.getClient(member.memberId)?.volatile.emit('GizzzComplete', completedGizzz);
+            });
         }
     }
 };
 
-const processDiscordEvent = async (
-    join: boolean,
-    channel: DiscChannel,
-    userId: string,
-): Promise<string | undefined> => {
+const processDiscordEvent = async (join: boolean, channel: DiscChannel, userId: string): Promise<Gizzz | undefined> => {
     const doc = await GizzzModel.findOne({ channel: channel }).exec();
     if (doc) {
         const g = gizzzFactory(doc);
@@ -117,7 +116,7 @@ const processDiscordEvent = async (
             await updateGizzz(doc._id, g);
         }
         if (g.status === GizzzStatus.Complete) {
-            return doc._id;
+            return g;
         }
     }
     return;
@@ -138,7 +137,7 @@ export const getGizzzHomeView = async (userId: string): Promise<false | GizzzTyp
         result.push(g.serialize());
     }
 
-    const pj = await GizzzModel.findOne({ status: 0, owner: { $ne: userId }, 'squad.member': userId });
+    const pj = await GizzzModel.findOne({ status: 0, owner: { $ne: userId }, 'squad.memberId': userId });
     if (pj) {
         const g = gizzzFactory(pj);
         result.push(g.serialize());
@@ -156,7 +155,7 @@ export const getGizzzHomeView = async (userId: string): Promise<false | GizzzTyp
         });
     }
 
-    const oc = await GizzzModel.findOne({ owner: userId, status: { $ne: 0 } });
+    const oc = await GizzzModel.findOne({ status: { $ne: 0 }, 'squad.memberId': userId });
     if (oc) {
         const g = new Gizzz(oc.status, oc.owner, oc.channel, oc.target, oc.squad, oc.others, oc.audience);
         result.push(g.serialize());

@@ -5,8 +5,7 @@
     "main": "dist/app.js",
     "scripts": {
         "dev": "tsc && nodemon dist/app.js -e ts,js,json --exec \"npm run start\" --ignore ./dist",
-        "start": "node dist/app.js",
-        "build": "tsc --build",
+        "start": "tsc --build && node dist/app.js",
         "lint": "npx eslint --cache \"**/*.{js,ts}\" --fix",
         "test": "jest --watchAll --collectCoverage --testTimeout=10000"
     },
@@ -26,10 +25,10 @@
         "nodemon": "^2.0.9",
         "prettier": "^2.3.2",
         "supertest": "^6.1.3",
-        "ts-jest": "^27.0.3",
-        "typescript": "^3.9.10"
+        "ts-jest": "^27.0.3"
     },
     "dependencies": {
+        "typescript": "^3.9.10",
         "cookie-parser": "~1.4.4",
         "cors": "^2.8.5",
         "discord.js": "^12.5.3",

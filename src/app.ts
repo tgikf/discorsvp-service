@@ -20,7 +20,7 @@ const authConfig = {
     authRequired: false,
     auth0Logout: true,
     secret: process.env.AUTH0_SECRET,
-    baseURL: 'http://localhost:' + PORT,
+    baseURL: process.env.SERVICE_URL,
     clientID: process.env.AUTH0_CLIENT_ID,
     issuerBaseURL: process.env.AUTH0_ISSUER_BASE,
 };
@@ -64,5 +64,5 @@ io.on('connection', (socket: Socket) => {
 });
 
 httpServer.listen(PORT, () => {
-    console.log(`API Server started at http://localhost:${PORT}`);
+    console.log(`API Server started at ${process.env.SERVICE_URL}`);
 });

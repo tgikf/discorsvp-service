@@ -45,6 +45,7 @@ app.get(API_BASE_PATH + '/user/rating', userController.getRating);
 app.post(API_BASE_PATH + '/gizzz/create', gizzzController.create);
 app.post(API_BASE_PATH + '/gizzz/:id/join', gizzzController.join);
 app.post(API_BASE_PATH + '/gizzz/:id/leave', gizzzController.leave);
+app.post(API_BASE_PATH + '/gizzz/:id/cancel', gizzzController.cancel);
 
 const errorHandler: ErrorRequestHandler = (error, req, res, next) => {
     return res.sendStatus(400);

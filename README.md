@@ -21,7 +21,7 @@ A Node.js project implemented in TypeScript consisting of
 -   AUTH0_SECRET
 -   AUTH0_CLIENT_ID
 -   AUTH0_ISSUER_BASE
--   SPA_URL
+-   SPA_HOST
 
 4. Run the app: `npm run dev` (watch mode) or `npm run start`
 5. Run unit tests: `npm t` or `npm run test`

@@ -1,4 +1,6 @@
 import express from 'express';
+import type { ErrorRequestHandler } from 'express';
+
 import * as dotenv from 'dotenv';
 import * as userController from './controllers/userController';
 import * as gizzzController from './controllers/gizzzController';
@@ -28,17 +30,13 @@ const authConfig = {
 app.use(jwtCheck);
 app.use(
     cors({
-        origin: process.env.SPA_URL,
+        origin: process.env.SPA_HOST,
     }),
 );
 app.use(auth(authConfig));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-
-app.get(API_BASE_PATH + '/online', (req, res) => {
-    res.sendStatus(200);
-});
 
 app.get(API_BASE_PATH + '/user/home', appController.getHome);
 app.get(API_BASE_PATH + '/user/channels', userController.getChannels);
@@ -48,11 +46,16 @@ app.post(API_BASE_PATH + '/gizzz/create', gizzzController.create);
 app.post(API_BASE_PATH + '/gizzz/:id/join', gizzzController.join);
 app.post(API_BASE_PATH + '/gizzz/:id/leave', gizzzController.leave);
 
-//app can't be used after hereafter anymore
+const errorHandler: ErrorRequestHandler = (error, req, res, next) => {
+    return res.sendStatus(400);
+};
+app.use(errorHandler);
+
+//app can't be used hereafter anymore
 const httpServer = createServer(app);
 export const io = new Server(httpServer, {
     cors: {
-        origin: process.env.SPA_URL,
+        origin: process.env.SPA_HOST,
         methods: ['GET', 'POST'],
     },
 });

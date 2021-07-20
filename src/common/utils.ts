@@ -30,6 +30,8 @@ export const addClient = (userId: string, client: Socket): void => {
 
 export const getClient = (userId: string): Socket | undefined => clients.get(userId);
 
+export const getConnectedClients = (): string[] => Array.from(clients.keys());
+
 export const getUserDisplayName = async (id: string): Promise<string> => await bot.getUserDisplayName(id);
 
 export const getServerDisplayName = async (id: string): Promise<string> => await bot.getServerDisplayName(id);

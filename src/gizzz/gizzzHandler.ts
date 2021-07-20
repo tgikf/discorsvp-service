@@ -40,6 +40,7 @@ export const createGizzz = async (
         );
         const doc = new GizzzModel(g.serialize());
         await doc.save();
+        triggerSocketUpdateEvent(g);
         return doc._id;
     }
     return undefined;
@@ -52,11 +53,7 @@ export const joinSquad = async (user: SquadMember, gizzzId: string): Promise<boo
         if (g.status === GizzzStatus.Pending && g.isInAudience(user) && !g.isSquadMember(user)) {
             g.addSquadMember(user);
             await updateGizzz(gizzzId, g);
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            //@ts-ignore
-            if (g.status === GizzzStatus.Complete) {
-                triggerGizzzCompleteEvent(g);
-            }
+            triggerSocketUpdateEvent(g);
             return true;
         }
     }
@@ -71,6 +68,7 @@ export const leaveSquad = async (user: SquadMember, gizzzId: string): Promise<bo
         if (g.status === GizzzStatus.Pending && g.isSquadMember(user)) {
             g.removeSquadMember(user);
             await updateGizzz(gizzzId, g);
+            triggerSocketUpdateEvent(g);
             return true;
         }
     }
@@ -84,6 +82,7 @@ export const cancelGizzz = async (gizzzId: string, user: SquadMember): Promise<b
         if (g.owner.id === user.id && g.status !== GizzzStatus.Complete) {
             g.status = GizzzStatus.Cancelled;
             await updateGizzz(gizzzId, g);
+            triggerSocketUpdateEvent(g);
             return true;
         }
     }
@@ -100,17 +99,17 @@ export const discordEventListener = async (event: DiscEvent): Promise<void> => {
         await processDiscordEvent(false, event.oldChannel, event.user);
     }
     if (event.newChannel) {
-        const completedGizzz = await processDiscordEvent(true, event.newChannel, event.user);
-        if (completedGizzz) {
-            triggerGizzzCompleteEvent(completedGizzz);
-        }
+        await processDiscordEvent(true, event.newChannel, event.user);
     }
 };
 
-const triggerGizzzCompleteEvent = (g: Gizzz) => {
-    g.squad.forEach((member) => {
-        console.log('emitting complete for', member.member.name);
-        utils.getClient(member.member.id)?.volatile.emit('GizzzComplete', g);
+const triggerSocketUpdateEvent = (g: Gizzz) => {
+    utils.getConnectedClients().forEach((client) => {
+        if (g.squad.find((member) => member.member.id === client && g.status === GizzzStatus.Complete)) {
+            utils.getClient(client)?.volatile.emit('GizzzUpdate', g, true);
+        } else {
+            utils.getClient(client)?.volatile.emit('GizzzUpdate', g, false);
+        }
     });
 };
 
@@ -118,7 +117,7 @@ const processDiscordEvent = async (
     join: boolean,
     channel: DiscChannel,
     user: { id: string; name: string },
-): Promise<Gizzz | undefined> => {
+): Promise<void> => {
     const doc = await GizzzModel.findOne({
         'channel.server.id': channel.server.id,
         'channel.channel.id': channel.channel.id,
@@ -135,53 +134,57 @@ const processDiscordEvent = async (
             }
             await updateGizzz(doc._id, g);
         }
-        if (g.status === GizzzStatus.Complete) {
-            return g;
-        }
+        triggerSocketUpdateEvent(g);
     }
-    return;
 };
 
 export const getGizzzHomeView = async (userId: string): Promise<false | GizzzType[]> => {
     /* 
     home view:
-    1. own, pending gizzz
-    2. others' pending gizzz joined
-    3. others' pending gizzz not joined
-    3. last own non-pending gizzz
+    1. any completed gizzz where user is a member
+    2. own, pending gizzz
+    3. others' pending gizzz joined
+    4. others' pending gizzz not joined
+    5. last own non-pending gizzz
     */
     const result = new Map<string, GizzzType>();
+
+    const c = await GizzzModel.findOne({ 'squad.memer.id': userId, status: 1 });
+    if (c) {
+        const g = gizzzFactory(c);
+        result.set(c.id, g.serialize());
+    }
+
     const op = await GizzzModel.findOne({ 'owner.id': userId, status: 0 });
     if (op) {
         const g = gizzzFactory(op);
-        result.set(op._id, g.serialize());
+        result.set(op.id, g.serialize());
     }
 
     const pj = await GizzzModel.findOne({ status: 0, 'owner.id': { $ne: userId }, 'squad.memer.id': userId });
     if (pj) {
         const g = gizzzFactory(pj);
-        result.set(op._id, g.serialize());
+        result.set(pj.id, g.serialize());
     }
 
-    const pnjList: GizzzType[] = await GizzzModel.find({
+    const pnjList = await GizzzModel.find({
         status: 0,
         owner: { $ne: userId },
         'squad.member': { $ne: userId },
     });
-    if (pnjList.length > 0) {
-        pnjList.forEach((pnj) => {
-            if (pnj._id) {
-                const g = gizzzFactory(pnj);
-                result.set(pnj._id, g.serialize());
-            }
-        });
-    }
+    pnjList.forEach((pnj: any) => {
+        if (pnj.id) {
+            const g = gizzzFactory(pnj);
+            result.set(pnj.id, g.serialize());
+        }
+    });
 
     const oc = await GizzzModel.findOne({ status: { $ne: 0 }, 'squad.member.id': userId });
     if (oc) {
         const g = gizzzFactory(oc);
-        result.set(op._id, g.serialize());
+        result.set(oc.id, g.serialize());
     }
+
     return Array.from(result.values());
 };
 

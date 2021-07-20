@@ -1,8 +1,0 @@
-{
-    "appService.zipIgnorePattern": [
-        "node_modules{,/**}",
-        ".vscode{,/**}"
-    ],
-    "appService.defaultWebAppToDeploy": "/subscriptions/33f4a91f-9c85-4ef4-9681-b74e90cc9590/resourceGroups/gizzz-service-res/providers/Microsoft.Web/sites/gizzz-service",
-    "appService.deploySubpath": "."
-}

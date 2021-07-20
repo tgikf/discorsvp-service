@@ -30,7 +30,11 @@ export const createGizzz = async (
     if (await GizzzModel.findOne({ 'owner.id': owner.id, status: 0 })) {
         return { success: false, message: 'You already have a pending Gizzz' };
     } else if (
-        await GizzzModel.findOne({ 'channel.server.id': channel.server.id, 'channel.channel.id': channel.channel.id })
+        await GizzzModel.findOne({
+            'channel.server.id': channel.server.id,
+            'channel.channel.id': channel.channel.id,
+            status: 0,
+        })
     ) {
         return { success: false, message: 'This channel already has a pending Gizzz' };
     } else {

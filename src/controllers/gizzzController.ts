@@ -18,7 +18,7 @@ export const create = async (req: express.Request, res: express.Response): Promi
             target,
         );
         if (status.success) {
-            res.send(utils.getResponse(ResStatus.Success, status));
+            res.send(utils.getResponse(ResStatus.Success, status.message));
         } else {
             res.status(400).send(utils.getResponse(ResStatus.Error, status.message));
         }

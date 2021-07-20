@@ -50,25 +50,26 @@ export default class DiscBot {
         });
     }
 
-    public getAllChannelIds(): Map<string, string[]> {
+    public getAllChannelIds(): DiscChannel[] {
         const isVoiceChannel = (c: Channel): c is VoiceChannel =>
             (c as VoiceChannel).guild !== undefined && (c as VoiceChannel).type === 'voice';
-
-        const serverMap = new Map<string, string[]>();
+        const channelList: DiscChannel[] = [];
         [...this.client.channels.cache].forEach((c) => {
             if (isVoiceChannel(c[1]) && !c[1].deleted) {
-                const prev = serverMap.get(c[1].guild.id) || [];
-                serverMap.set(c[1].guild.id, [...prev, c[1].id]);
+                channelList.push({
+                    server: { id: c[1].guild.id, name: c[1].guild.name },
+                    channel: { id: c[1].id, name: c[1].name },
+                });
             }
         });
 
-        return serverMap;
+        return channelList;
     }
 
-    public getUserIdsByChannel(channelId: DiscChannel): SquadMember[] {
+    public getUserIdsByChannel(channel: DiscChannel): SquadMember[] {
         const voiceStates = this.client.guilds.cache
-            .get(channelId.server.id)
-            ?.voiceStates.cache.filter((vs) => vs.channelID === channelId.channel.id);
+            .get(channel.server.id)
+            ?.voiceStates.cache.filter((vs) => vs.channelID === channel.channel.id);
 
         return (
             voiceStates?.map((vs) => {
@@ -77,7 +78,15 @@ export default class DiscBot {
         );
     }
 
-    public getUserDisplayName(id: string): string | undefined {
-        return this.client.users.cache.get(id)?.tag;
+    public async getUserDisplayName(id: string): Promise<string> {
+        return (await this.client.users.fetch(id)).username;
+    }
+
+    public async getServerDisplayName(id: string): Promise<string> {
+        return (await this.client.guilds.fetch(id)).name;
+    }
+
+    public async getChannelDisplayName(id: string): Promise<string> {
+        return ((await this.client.channels.fetch(id)) as VoiceChannel).name;
     }
 }

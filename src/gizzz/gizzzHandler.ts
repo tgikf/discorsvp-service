@@ -27,7 +27,7 @@ export const createGizzz = async (
     target: number,
     audience?: SquadMember[],
 ): Promise<string | undefined> => {
-    if (!(await GizzzModel.findOne({ owner: owner.id, status: 0 }))) {
+    if (!(await GizzzModel.findOne({ 'owner.id': owner.id, status: 0 }))) {
         const g = new Gizzz(
             GizzzStatus.Pending,
             owner,
@@ -110,7 +110,10 @@ const processDiscordEvent = async (
     channel: DiscChannel,
     user: { id: string; name: string },
 ): Promise<Gizzz | undefined> => {
-    const doc = await GizzzModel.findOne({ channel: channel }).exec();
+    const doc = await GizzzModel.findOne({
+        'channel.server.id': channel.server.id,
+        'channel.channel.id': channel.channel.id,
+    }).exec();
     if (doc) {
         const g = gizzzFactory(doc);
         if (g.status === GizzzStatus.Pending) {
@@ -145,7 +148,7 @@ export const getGizzzHomeView = async (userId: string): Promise<false | GizzzTyp
         result.push(g.serialize());
     }
 
-    const pj = await GizzzModel.findOne({ status: 0, owner: { $ne: userId }, 'squad.memberId': userId });
+    const pj = await GizzzModel.findOne({ status: 0, 'owner.id': { $ne: userId }, 'squad.memer.id': userId });
     if (pj) {
         const g = gizzzFactory(pj);
         result.push(g.serialize());
@@ -163,7 +166,7 @@ export const getGizzzHomeView = async (userId: string): Promise<false | GizzzTyp
         });
     }
 
-    const oc = await GizzzModel.findOne({ status: { $ne: 0 }, 'squad.memberId': userId });
+    const oc = await GizzzModel.findOne({ status: { $ne: 0 }, 'squad.member.id': userId });
     if (oc) {
         const g = new Gizzz(oc.status, oc.owner, oc.channel, oc.target, oc.squad, oc.others, oc.audience);
         result.push(g.serialize());

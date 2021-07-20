@@ -1,6 +1,7 @@
 import { Socket } from 'socket.io';
 import DiscBot from '../discord/DiscBot';
 import ResStatus from '../controllers/ResStatus';
+import DiscChannel from '../discord/DiscChannel';
 
 export const bot = new DiscBot();
 
@@ -13,13 +14,7 @@ export const getAuthenticatedUser = (token: string): string => {
     return parseDiscUserId(decoded.sub);
 };
 
-export const getChannels = (): { server: string; channels: string[] }[] => {
-    const channels: { server: string; channels: string[] }[] = [];
-    Array.from(bot.getAllChannelIds()).map((e) => {
-        channels.push({ server: e[0], channels: e[1] });
-    });
-    return channels;
-};
+export const getChannels = (): DiscChannel[] => bot.getAllChannelIds();
 
 export const getResponse = (
     status: ResStatus,
@@ -35,4 +30,8 @@ export const addClient = (userId: string, client: Socket): void => {
 
 export const getClient = (userId: string): Socket | undefined => clients.get(userId);
 
-export const getUserDisplayName = (userId: string): string | undefined => bot.getUserDisplayName(userId);
+export const getUserDisplayName = async (id: string): Promise<string> => await bot.getUserDisplayName(id);
+
+export const getServerDisplayName = async (id: string): Promise<string> => await bot.getServerDisplayName(id);
+
+export const getChannelDisplayName = async (id: string): Promise<string> => await bot.getChannelDisplayName(id);

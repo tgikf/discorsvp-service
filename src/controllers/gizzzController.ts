@@ -12,15 +12,15 @@ export const create = async (req: express.Request, res: express.Response): Promi
         channel.server.name = await utils.getServerDisplayName(channel.server.id);
         channel.channel.name = await utils.getChannelDisplayName(channel.channel.id);
 
-        const gizzzId = await createGizzz(
+        const status = await createGizzz(
             { id: userId, name: (await utils.getUserDisplayName(userId)) || 'not found' },
             channel,
             target,
         );
-        if (gizzzId) {
-            res.send(utils.getResponse(ResStatus.Success, gizzzId));
+        if (status.success) {
+            res.send(utils.getResponse(ResStatus.Success, status));
         } else {
-            res.sendStatus(422);
+            res.status(400).send(utils.getResponse(ResStatus.Error, status.message));
         }
     } else {
         res.send(utils.getResponse(ResStatus.Empty));
@@ -34,10 +34,10 @@ export const join = async (req: express.Request, res: express.Response): Promise
         if (await joinSquad({ id: userId, name: (await utils.getUserDisplayName(userId)) || 'not found' }, gizzzId)) {
             res.sendStatus(200);
         } else {
-            res.sendStatus(422);
+            res.status(400).send(utils.getResponse(ResStatus.Error));
         }
     } else {
-        res.sendStatus(400);
+        res.status(400).send(utils.getResponse(ResStatus.Error));
     }
 };
 
@@ -48,10 +48,10 @@ export const leave = async (req: express.Request, res: express.Response): Promis
         if (await leaveSquad({ id: userId, name: (await utils.getUserDisplayName(userId)) || 'not found' }, gizzzId)) {
             res.sendStatus(200);
         } else {
-            res.sendStatus(422);
+            res.status(400).send(utils.getResponse(ResStatus.Error));
         }
     } else {
-        res.sendStatus(400);
+        res.status(400).send(utils.getResponse(ResStatus.Error));
     }
 };
 
@@ -62,9 +62,9 @@ export const cancel = async (req: express.Request, res: express.Response): Promi
         if (await cancelGizzz(gizzzId, { id: userId, name: (await utils.getUserDisplayName(userId)) || 'not found' })) {
             res.sendStatus(200);
         } else {
-            res.sendStatus(422);
+            res.status(400).send(utils.getResponse(ResStatus.Error));
         }
     } else {
-        res.sendStatus(400);
+        res.status(400).send(utils.getResponse(ResStatus.Error));
     }
 };

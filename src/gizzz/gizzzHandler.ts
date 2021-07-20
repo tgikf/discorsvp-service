@@ -26,8 +26,14 @@ export const createGizzz = async (
     channel: DiscChannel,
     target: number,
     audience?: SquadMember[],
-): Promise<string | undefined> => {
-    if (!(await GizzzModel.findOne({ 'owner.id': owner.id, status: 0 }))) {
+): Promise<{ success: boolean; message: string }> => {
+    if (await GizzzModel.findOne({ 'owner.id': owner.id, status: 0 })) {
+        return { success: false, message: 'You already have a pending Gizzz' };
+    } else if (
+        await GizzzModel.findOne({ 'channel.server.id': channel.server.id, 'channel.channel.id': channel.channel.id })
+    ) {
+        return { success: false, message: 'Pending Gizzz in same channel' };
+    } else {
         const g = new Gizzz(
             GizzzStatus.Pending,
             owner,
@@ -41,9 +47,9 @@ export const createGizzz = async (
         const doc = new GizzzModel(g.serialize());
         await doc.save();
         triggerSocketUpdateEvent(g);
-        return doc._id;
+        return { success: true, message: doc._id };
     }
-    return undefined;
+    return { success: false, message: 'unspecified' };
 };
 
 export const joinSquad = async (user: SquadMember, gizzzId: string): Promise<boolean> => {
@@ -105,6 +111,7 @@ export const discordEventListener = async (event: DiscEvent): Promise<void> => {
 
 const triggerSocketUpdateEvent = (g: Gizzz) => {
     utils.getConnectedClients().forEach((client) => {
+        console.log('thisisit', g.serialize(), g.status);
         if (g.squad.find((member) => member.member.id === client && g.status === GizzzStatus.Complete)) {
             utils.getClient(client)?.volatile.emit('GizzzUpdate', g, true);
         } else {
@@ -122,9 +129,11 @@ const processDiscordEvent = async (
         'channel.server.id': channel.server.id,
         'channel.channel.id': channel.channel.id,
     }).exec();
+    console.log('processdiscevent doc', doc);
     if (doc) {
         const g = gizzzFactory(doc);
         if (g.status === GizzzStatus.Pending) {
+            console.log('herererer');
             if (g.isSquadMember(user)) {
                 g.updateSquadMember(user, join);
             } else if (join) {

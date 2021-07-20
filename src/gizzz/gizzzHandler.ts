@@ -7,6 +7,7 @@ import GizzzStatus from './GizzzStatus';
 import DiscEvent from '../discord/DiscEvent';
 import GizzzType from './GizzzType';
 import * as utils from '../common/utils';
+import SquadMember from './SquadMember';
 dotenv.config();
 
 mongoose
@@ -21,15 +22,15 @@ const gizzzFactory = (doc: GizzzType): Gizzz =>
     new Gizzz(doc.status, doc.owner, doc.channel, doc.target, doc.squad, doc.others, doc._id, doc.audience);
 
 export const createGizzz = async (
-    ownerUserId: string,
+    owner: SquadMember,
     channel: DiscChannel,
     target: number,
-    audience?: string[],
+    audience?: SquadMember[],
 ): Promise<string | undefined> => {
-    if (!(await GizzzModel.findOne({ owner: ownerUserId, status: 0 }))) {
+    if (!(await GizzzModel.findOne({ owner: owner.id, status: 0 }))) {
         const g = new Gizzz(
             GizzzStatus.Pending,
-            ownerUserId,
+            owner,
             channel,
             target,
             [],
@@ -44,12 +45,12 @@ export const createGizzz = async (
     return undefined;
 };
 
-export const joinSquad = async (userId: string, gizzzId: string): Promise<boolean> => {
+export const joinSquad = async (user: SquadMember, gizzzId: string): Promise<boolean> => {
     const doc = await GizzzModel.findById(gizzzId).exec();
     if (doc) {
         const g = gizzzFactory(doc);
-        if (g.status === GizzzStatus.Pending && g.isInAudience(userId) && !g.isSquadMember(userId)) {
-            g.addSquadMember(userId);
+        if (g.status === GizzzStatus.Pending && g.isInAudience(user) && !g.isSquadMember(user)) {
+            g.addSquadMember(user);
             await updateGizzz(gizzzId, g);
             return true;
         }
@@ -57,12 +58,13 @@ export const joinSquad = async (userId: string, gizzzId: string): Promise<boolea
     return false;
 };
 
-export const leaveSquad = async (userId: string, gizzzId: string): Promise<boolean> => {
+export const leaveSquad = async (user: SquadMember, gizzzId: string): Promise<boolean> => {
     const doc = await GizzzModel.findById(gizzzId).exec();
     if (doc) {
         const g = gizzzFactory(doc);
-        if (g.status === GizzzStatus.Pending && g.isSquadMember(userId)) {
-            g.removeSquadMember(userId);
+
+        if (g.status === GizzzStatus.Pending && g.isSquadMember(user)) {
+            g.removeSquadMember(user);
             await updateGizzz(gizzzId, g);
             return true;
         }
@@ -70,11 +72,11 @@ export const leaveSquad = async (userId: string, gizzzId: string): Promise<boole
     return false;
 };
 
-export const cancelGizzz = async (gizzzId: string, userId: string): Promise<boolean> => {
+export const cancelGizzz = async (gizzzId: string, user: SquadMember): Promise<boolean> => {
     const doc = await GizzzModel.findById(gizzzId).exec();
     if (doc) {
         const g = gizzzFactory(doc);
-        if (g.owner === userId && g.status !== GizzzStatus.Complete) {
+        if (g.owner.id === user.id && g.status !== GizzzStatus.Complete) {
             g.status = GizzzStatus.Cancelled;
             await updateGizzz(gizzzId, g);
             return true;
@@ -85,7 +87,9 @@ export const cancelGizzz = async (gizzzId: string, userId: string): Promise<bool
 
 export const discordEventListener = async (event: DiscEvent): Promise<void> => {
     console.log(
-        `User ${event.user} moved from ${JSON.stringify(event.oldChannel)} to ${JSON.stringify(event.newChannel)}}`,
+        `User ${event.user.name} moved from ${JSON.stringify(event.oldChannel)} to ${JSON.stringify(
+            event.newChannel,
+        )}}`,
     );
     if (event.oldChannel) {
         await processDiscordEvent(false, event.oldChannel, event.user);
@@ -95,23 +99,27 @@ export const discordEventListener = async (event: DiscEvent): Promise<void> => {
         if (completedGizzz) {
             console.log('GizzzComplete', completedGizzz);
             completedGizzz.squad.forEach((member) => {
-                utils.getClient(member.memberId)?.volatile.emit('GizzzComplete', completedGizzz);
+                utils.getClient(member.member.id)?.volatile.emit('GizzzComplete', completedGizzz);
             });
         }
     }
 };
 
-const processDiscordEvent = async (join: boolean, channel: DiscChannel, userId: string): Promise<Gizzz | undefined> => {
+const processDiscordEvent = async (
+    join: boolean,
+    channel: DiscChannel,
+    user: { id: string; name: string },
+): Promise<Gizzz | undefined> => {
     const doc = await GizzzModel.findOne({ channel: channel }).exec();
     if (doc) {
         const g = gizzzFactory(doc);
         if (g.status === GizzzStatus.Pending) {
-            if (g.isSquadMember(userId)) {
-                g.updateSquadMember(userId, join);
+            if (g.isSquadMember(user)) {
+                g.updateSquadMember(user, join);
             } else if (join) {
-                g.addOthersMember(userId);
+                g.addOthersMember(user);
             } else {
-                g.removeOthersMember(userId);
+                g.removeOthersMember(user);
             }
             await updateGizzz(doc._id, g);
         }

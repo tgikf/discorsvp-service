@@ -1,6 +1,13 @@
 import GizzzModel from '../model/GizzzModel';
 import { discordEventListener, joinSquad, leaveSquad } from './gizzzHandler';
 
+const shellChannel = {
+    server: { id: 'someserver', name: 'someserver' },
+    channel: { id: 'somechannel', name: 'somechannel' },
+};
+const shellOwner = { id: 'owner', name: 'owner' };
+const shellMember = { id: 'member', name: 'member' };
+
 jest.mock('../model/GizzzModel', () => ({
     findById: jest.fn().mockImplementation(() => {
         return {
@@ -8,13 +15,13 @@ jest.mock('../model/GizzzModel', () => ({
                 return {
                     _id: 'mockId',
                     status: 0,
-                    owner: 'own',
-                    channel: { server: 'mocksrv', channel: 'mockchannel' },
+                    owner: shellOwner,
+                    channel: shellChannel,
                     target: 999,
-                    squad: [{ memberId: 'mocksquadmember', hasJoined: false }],
+                    squad: [{ member: shellMember, hasJoined: false }],
                     others: [],
                     id: '',
-                    audience: ['abc'],
+                    audience: [{ id: 'abc', name: 'abc' }],
                 };
             },
         };
@@ -25,15 +32,15 @@ jest.mock('../model/GizzzModel', () => ({
                 return {
                     _id: 'mockId',
                     status: 0,
-                    owner: 'owner',
-                    channel: { server: 'mocksrv', channel: 'mockchannel' },
+                    owner: shellOwner,
+                    channel: shellChannel,
                     target: 2,
                     squad: [
-                        { memberId: 'owner', hasJoined: true },
-                        { memberId: 'mocksquadmember', hasJoined: false },
+                        { member: shellOwner, hasJoined: true },
+                        { member: { id: 'abc', name: 'abc' }, hasJoined: false },
                     ],
                     others: [],
-                    audience: ['abc'],
+                    audience: [{ id: 'abc', name: 'abc' }],
                 };
             },
         };
@@ -59,7 +66,7 @@ describe('GizzzDao', () => {
     });*/
 
     it('lets a user in the audience user join the squad', async () => {
-        const status = await joinSquad('abc', 'irrelevant');
+        const status = await joinSquad({ id: 'abc', name: 'abc' }, 'irrelevant');
 
         expect(GizzzModel.findById).toHaveBeenCalledTimes(1);
         expect(GizzzModel.findOneAndUpdate).toHaveBeenCalledTimes(1);
@@ -67,7 +74,7 @@ describe('GizzzDao', () => {
     });
 
     it('does not let an invalid user join the squad', async () => {
-        const status = await joinSquad('def', 'abcdef');
+        const status = await joinSquad({ id: 'def', name: 'def' }, 'abcdef');
 
         expect(GizzzModel.findById).toHaveBeenCalledTimes(1);
         expect(GizzzModel.findOneAndUpdate).toHaveBeenCalledTimes(0);
@@ -75,14 +82,14 @@ describe('GizzzDao', () => {
     });
 
     it('lets a squad member leave the squad', async () => {
-        const status = await leaveSquad('mocksquadmember', 'irrelevant');
+        const status = await leaveSquad(shellMember, 'irrelevant');
         expect(GizzzModel.findById).toHaveBeenCalledTimes(1);
         expect(GizzzModel.findOneAndUpdate).toHaveBeenCalledTimes(1);
         expect(status).toBeTruthy();
     });
 
     it('does not let a non-member leave the squad', async () => {
-        const status = await leaveSquad('abc', 'irrelevant');
+        const status = await leaveSquad({ id: 'abc', name: 'abc' }, 'irrelevant');
         expect(GizzzModel.findById).toHaveBeenCalledTimes(1);
         expect(GizzzModel.findOneAndUpdate).not.toHaveBeenCalled();
         expect(status).toBeFalsy();
@@ -90,9 +97,15 @@ describe('GizzzDao', () => {
 
     it('processes discord events correctly', async () => {
         await discordEventListener({
-            user: 'irrelevant',
-            oldChannel: { server: 'oldserver', channel: 'oldserveroldchannel' },
-            newChannel: { server: 'newserver', channel: 'newservernewchannel' },
+            user: { id: 'irrelevant', name: 'mocksquadmember' },
+            oldChannel: {
+                server: { id: 'oldserver', name: 'irrelevant' },
+                channel: { id: 'oldchannel', name: 'irrelevant' },
+            },
+            newChannel: {
+                server: { id: 'newserver', name: 'irrelevant' },
+                channel: { id: 'newchannel', name: 'irrelevant' },
+            },
         });
         expect(GizzzModel.findOne).toHaveBeenCalledTimes(2);
         expect(GizzzModel.findOneAndUpdate).toHaveBeenCalledTimes(2);
@@ -106,9 +119,15 @@ describe('GizzzDao', () => {
         (this is because the findOne mock always returns the same channel)
         */
         await discordEventListener({
-            user: 'mocksquadmember',
-            oldChannel: { server: 'irrelevant', channel: 'irrelevant' },
-            newChannel: { server: 'irrelevant', channel: 'irrelevant' },
+            user: { id: 'irrelevant', name: 'mocksquadmember' },
+            oldChannel: {
+                server: { id: 'irrelevant', name: 'irrelevant' },
+                channel: { id: 'irrelevant', name: 'irrelevant' },
+            },
+            newChannel: {
+                server: { id: 'irrelevant', name: 'irrelevant' },
+                channel: { id: 'irrelevant', name: 'irrelevant' },
+            },
         });
         expect(GizzzModel.findOne).toHaveBeenCalledTimes(2);
         expect(GizzzModel.findOneAndUpdate).toHaveBeenCalledTimes(2);

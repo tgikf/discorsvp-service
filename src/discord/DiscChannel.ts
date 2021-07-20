@@ -1,6 +1,6 @@
 type DiscChannel = {
-    server: string;
-    channel: string;
+    server: { id: string; name?: string };
+    channel: { id: string; name?: string };
 };
 
 export default DiscChannel;

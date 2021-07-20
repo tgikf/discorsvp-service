@@ -1,15 +1,16 @@
 import DiscChannel from '../discord/DiscChannel';
 import GizzzStatus from './GizzzStatus';
+import SquadMember from './SquadMember';
 
 type GizzzType = {
     _id?: string;
     status: GizzzStatus;
-    owner: string;
+    owner: SquadMember;
     channel: DiscChannel;
     target: number;
-    audience?: string[];
-    squad: { memberId: string; hasJoined: boolean }[];
-    others: string[];
+    audience?: SquadMember[];
+    squad: { member: SquadMember; hasJoined: boolean }[];
+    others: SquadMember[];
 };
 
 export default GizzzType;

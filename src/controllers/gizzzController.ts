@@ -5,10 +5,14 @@ import ResStatus from './ResStatus';
 import { getAuthenticatedUser } from '../common/utils';
 
 export const create = async (req: express.Request, res: express.Response): Promise<void> => {
-    const user = req.headers.authorization ? getAuthenticatedUser(req.headers.authorization) : undefined;
+    const userId = req.headers.authorization ? getAuthenticatedUser(req.headers.authorization) : undefined;
     const { channel, target } = req.body;
-    if (user && channel && target) {
-        const gizzzId = await createGizzz(user, channel, target);
+    if (userId && channel && target) {
+        const gizzzId = await createGizzz(
+            { id: userId, name: utils.getUserDisplayName(userId) || 'not found' },
+            channel,
+            target,
+        );
         if (gizzzId) {
             res.send(utils.getResponse(ResStatus.Success, gizzzId));
         } else {
@@ -21,9 +25,9 @@ export const create = async (req: express.Request, res: express.Response): Promi
 
 export const join = async (req: express.Request, res: express.Response): Promise<void> => {
     const gizzzId = req.params.id;
-    const user = req.headers.authorization ? getAuthenticatedUser(req.headers.authorization) : undefined;
-    if (user && gizzzId) {
-        if (await joinSquad(user, gizzzId)) {
+    const userId = req.headers.authorization ? getAuthenticatedUser(req.headers.authorization) : undefined;
+    if (userId && gizzzId) {
+        if (await joinSquad({ id: userId, name: utils.getUserDisplayName(userId) || 'not found' }, gizzzId)) {
             res.sendStatus(200);
         } else {
             res.sendStatus(422);
@@ -35,9 +39,9 @@ export const join = async (req: express.Request, res: express.Response): Promise
 
 export const leave = async (req: express.Request, res: express.Response): Promise<void> => {
     const gizzzId = req.params.id;
-    const user = req.headers.authorization ? getAuthenticatedUser(req.headers.authorization) : undefined;
-    if (user && gizzzId) {
-        if (await leaveSquad(user, gizzzId)) {
+    const userId = req.headers.authorization ? getAuthenticatedUser(req.headers.authorization) : undefined;
+    if (userId && gizzzId) {
+        if (await leaveSquad({ id: userId, name: utils.getUserDisplayName(userId) || 'not found' }, gizzzId)) {
             res.sendStatus(200);
         } else {
             res.sendStatus(422);
@@ -49,9 +53,9 @@ export const leave = async (req: express.Request, res: express.Response): Promis
 
 export const cancel = async (req: express.Request, res: express.Response): Promise<void> => {
     const gizzzId = req.params.id;
-    const user = req.headers.authorization ? getAuthenticatedUser(req.headers.authorization) : undefined;
-    if (gizzzId && user) {
-        if (await cancelGizzz(gizzzId, user)) {
+    const userId = req.headers.authorization ? getAuthenticatedUser(req.headers.authorization) : undefined;
+    if (gizzzId && userId) {
+        if (await cancelGizzz(gizzzId, { id: userId, name: utils.getUserDisplayName(userId) || 'not found' })) {
             res.sendStatus(200);
         } else {
             res.sendStatus(422);

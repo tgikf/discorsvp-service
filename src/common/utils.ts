@@ -34,3 +34,5 @@ export const addClient = (userId: string, client: Socket): void => {
 };
 
 export const getClient = (userId: string): Socket | undefined => clients.get(userId);
+
+export const getUserDisplayName = (userId: string): string | undefined => bot.getUserDisplayName(userId);

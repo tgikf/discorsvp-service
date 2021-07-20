@@ -27,6 +27,10 @@ const authConfig = {
     issuerBaseURL: process.env.AUTH0_ISSUER_BASE,
 };
 
+const errorHandler: ErrorRequestHandler = (error, req, res, next) => {
+    return res.sendStatus(400);
+};
+
 app.use(jwtCheck);
 app.use(
     cors({
@@ -47,9 +51,6 @@ app.post(API_BASE_PATH + '/gizzz/:id/join', gizzzController.join);
 app.post(API_BASE_PATH + '/gizzz/:id/leave', gizzzController.leave);
 app.post(API_BASE_PATH + '/gizzz/:id/cancel', gizzzController.cancel);
 
-const errorHandler: ErrorRequestHandler = (error, req, res, next) => {
-    return res.sendStatus(400);
-};
 app.use(errorHandler);
 
 //app can't be used hereafter anymore

@@ -32,7 +32,7 @@ export const createGizzz = async (
     } else if (
         await GizzzModel.findOne({ 'channel.server.id': channel.server.id, 'channel.channel.id': channel.channel.id })
     ) {
-        return { success: false, message: 'Pending Gizzz in same channel' };
+        return { success: false, message: 'This channel already has a pending Gizzz' };
     } else {
         const g = new Gizzz(
             GizzzStatus.Pending,
@@ -111,7 +111,6 @@ export const discordEventListener = async (event: DiscEvent): Promise<void> => {
 
 const triggerSocketUpdateEvent = (g: Gizzz) => {
     utils.getConnectedClients().forEach((client) => {
-        console.log('thisisit', g.serialize(), g.status);
         if (g.squad.find((member) => member.member.id === client && g.status === GizzzStatus.Complete)) {
             utils.getClient(client)?.volatile.emit('GizzzUpdate', g, true);
         } else {
@@ -129,7 +128,6 @@ const processDiscordEvent = async (
         'channel.server.id': channel.server.id,
         'channel.channel.id': channel.channel.id,
     }).exec();
-    console.log('processdiscevent doc', doc);
     if (doc) {
         const g = gizzzFactory(doc);
         if (g.status === GizzzStatus.Pending) {

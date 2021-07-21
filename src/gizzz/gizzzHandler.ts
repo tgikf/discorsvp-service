@@ -131,11 +131,11 @@ const processDiscordEvent = async (
     const doc = await GizzzModel.findOne({
         'channel.server.id': channel.server.id,
         'channel.channel.id': channel.channel.id,
+        status: 0,
     }).exec();
     if (doc) {
         const g = gizzzFactory(doc);
         if (g.status === GizzzStatus.Pending) {
-            console.log('herererer');
             if (g.isSquadMember(user)) {
                 g.updateSquadMember(user, join);
             } else if (join) {

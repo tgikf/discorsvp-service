@@ -8,6 +8,7 @@ import DiscEvent from '../discord/DiscEvent';
 import GizzzType from './GizzzType';
 import * as utils from '../common/utils';
 import SquadMember from './SquadMember';
+import { pushToAndroid } from '../common/push';
 dotenv.config();
 
 mongoose
@@ -50,7 +51,7 @@ export const createGizzz = async (
         );
         const doc = new GizzzModel(g.serialize());
         await doc.save();
-        triggerSocketUpdateEvent(g);
+        triggerClientUpdateEvent(g);
         return { success: true, message: doc._id };
     }
     return { success: false, message: 'unspecified' };
@@ -63,7 +64,7 @@ export const joinSquad = async (user: SquadMember, gizzzId: string): Promise<boo
         if (g.status === GizzzStatus.Pending && g.isInAudience(user) && !g.isSquadMember(user)) {
             g.addSquadMember(user);
             await updateGizzz(gizzzId, g);
-            triggerSocketUpdateEvent(g);
+            triggerClientUpdateEvent(g);
             return true;
         }
     }
@@ -78,7 +79,7 @@ export const leaveSquad = async (user: SquadMember, gizzzId: string): Promise<bo
         if (g.status === GizzzStatus.Pending && g.isSquadMember(user)) {
             g.removeSquadMember(user);
             await updateGizzz(gizzzId, g);
-            triggerSocketUpdateEvent(g);
+            triggerClientUpdateEvent(g);
             return true;
         }
     }
@@ -92,7 +93,7 @@ export const cancelGizzz = async (gizzzId: string, user: SquadMember): Promise<b
         if (g.owner.id === user.id && g.status !== GizzzStatus.Complete) {
             g.status = GizzzStatus.Cancelled;
             await updateGizzz(gizzzId, g);
-            triggerSocketUpdateEvent(g);
+            triggerClientUpdateEvent(g);
             return true;
         }
     }
@@ -113,7 +114,8 @@ export const discordEventListener = async (event: DiscEvent): Promise<void> => {
     }
 };
 
-const triggerSocketUpdateEvent = (g: Gizzz) => {
+const triggerClientUpdateEvent = (g: Gizzz) => {
+    pushToAndroid('pushing and update on ' + JSON.stringify(g.serialize()));
     utils.getConnectedClients().forEach((client) => {
         if (g.squad.find((member) => member.member.id === client && g.status === GizzzStatus.Complete)) {
             utils.getClient(client)?.volatile.emit('GizzzUpdate', g, true);
@@ -145,7 +147,7 @@ const processDiscordEvent = async (
             }
             await updateGizzz(doc._id, g);
         }
-        triggerSocketUpdateEvent(g);
+        triggerClientUpdateEvent(g);
     }
 };
 

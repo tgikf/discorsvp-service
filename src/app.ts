@@ -17,6 +17,7 @@ dotenv.config();
 const PORT = process.env.PORT || 8080;
 const app = express();
 const API_BASE_PATH = '/api';
+let origin = 'INVALID_ORIGIN';
 
 const authConfig = {
     authRequired: false,
@@ -32,11 +33,16 @@ const errorHandler: ErrorRequestHandler = (error, req, res, next) => {
 };
 
 app.use(jwtCheck);
-app.use(
-    cors({
-        origin: process.env.SPA_HOST,
-    }),
-);
+
+app.use((req, res, next) => {
+    origin = req.headers.origin ? req.headers.origin : 'INVALID_ORIGIN';
+    if (process.env.ALLOWED_ORIGINS?.includes(origin)) {
+        cors({
+            origin: origin,
+        });
+    }
+});
+
 app.use(auth(authConfig));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -57,7 +63,7 @@ app.use(errorHandler);
 const httpServer = createServer(app);
 export const io = new Server(httpServer, {
     cors: {
-        origin: process.env.SPA_HOST,
+        origin: origin,
         methods: ['GET', 'POST'],
     },
 });

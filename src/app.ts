@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 import * as userController from './controllers/userController';
 import * as gizzzController from './controllers/gizzzController';
 import * as appController from './controllers/appController';
-import cors from 'cors';
+//import cors from 'cors';
 import { auth } from 'express-openid-connect';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
@@ -31,21 +31,13 @@ const errorHandler: ErrorRequestHandler = (error, req, res, next) => {
     return res.sendStatus(400);
 };
 
-const corsValidator = (origin, callback) => {
-    if (origin && ['http://localhost:8100', 'capacitor://localhost', 'http://localhost'].includes(origin)) {
-        callback(null, true);
-    } else {
-        callback(new Error('Origin rejected.'));
-    }
-};
-
 app.use(jwtCheck);
 
-app.use(
+/*app.use(
     cors({
-        origin: corsValidator,
+        origin: ['http://localhost:8100', 'capacitor://localhost'],
     }),
-);
+);*/
 app.use(auth(authConfig));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -64,12 +56,7 @@ app.use(errorHandler);
 
 //app can't be used hereafter anymore
 const httpServer = createServer(app);
-export const io = new Server(httpServer, {
-    cors: {
-        origin: corsValidator,
-        methods: ['GET', 'POST'],
-    },
-});
+export const io = new Server(httpServer);
 io.on('connection', (socket: Socket) => {
     socket.on('clientInfo', (discUser: string) => {
         console.log('clientInfo event', discUser);

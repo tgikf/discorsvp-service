@@ -185,10 +185,10 @@ export const getGizzzHomeView = async (userId: string): Promise<false | GizzzTyp
         owner: { $ne: userId },
         'squad.member': { $ne: userId },
     });
-    pnjList.forEach((pnj: any) => {
-        if (pnj.id) {
+    pnjList.forEach((pnj: GizzzType) => {
+        if (pnj._id) {
             const g = gizzzFactory(pnj);
-            result.set(pnj.id, g.serialize());
+            result.set(pnj._id, g.serialize());
         }
     });
 

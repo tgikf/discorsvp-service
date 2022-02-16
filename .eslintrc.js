@@ -1,24 +1,15 @@
 module.exports = {
-    parser: '@typescript-eslint/parser', // Specifies the ESLint parser
+    env: {
+        browser: true,
+        es2021: true,
+    },
+    extends: ['airbnb-base', 'airbnb-typescript/base', 'prettier'],
+    parser: '@typescript-eslint/parser',
     parserOptions: {
-        ecmaVersion: 2020, // Allows for the parsing of modern ECMAScript features
-        sourceType: 'module', // Allows for the use of imports
-        ecmaFeatures: {
-            jsx: true, // Allows for the parsing of JSX
-        },
+        ecmaVersion: 12,
+        sourceType: 'module',
+        project: ['./tsconfig.json'],
     },
-    settings: {
-        react: {
-            version: 'detect', // Tells eslint-plugin-react to automatically detect the version of React to use
-        },
-    },
-    extends: [
-        'plugin:@typescript-eslint/recommended', // Uses the recommended rules from the @typescript-eslint/eslint-plugin
-        'plugin:prettier/recommended', // Enables eslint-plugin-prettier and eslint-config-prettier. This will display prettier errors as ESLint errors. Make sure this is always the last configuration in the extends array.
-    ],
-    rules: {
-        // Place to specify ESLint rules. Can be used to overwrite rules specified from the extended configs
-        // e.g. "@typescript-eslint/explicit-function-return-type": "off",
-    },
-    ignorePatterns: ['node_modules', 'build', 'dist', 'generated'],
+    plugins: ['@typescript-eslint', 'prettier'],
+    rules: { 'no-underscore-dangle': 'off' },
 };

@@ -1,38 +1,21 @@
-# gizzz-service
+# DiscoRSVP
 
-A Node.js project implemented in TypeScript consisting of
+> The name DiscoRSVP is a combination of Discord, a popular VoIP tool among gamers, and `RSVP`, an initialism derived from the French phrase Répondez s'il vous plaît, literally meaning "Respond, If-You-Please", or just "Please Respond", to require confirmation of an invitation.
 
--   a back end server running
-    -   a set of RESTful end points
-    -   a web socket
--   a discord bot that tracks user presence
+## What even is this?
 
-## Development environment set up
+Do you enjoy ganging up with your friends in Discord channels when playing video games? \
+Do you have terrible friends that seemingly accept your invite to play but don't actually show up? \
+Are you fed up with getting baited? \
+Then **DiscoRSVP** is for you!
 
-1. Clone repository and make sure Node.js (incl. NPM) is installed
-2. Install dependencies with `npm i`
-3. Make sure you have the environment variables set up (.env file):
+DiscoRSVP is a pet project that allows you to announce gaming sessions and tie them to a specific Discord channel. The app will track attendance on the selected channel and notify your Squad when everybody is there.
 
--   PORT
--   DISC_TOKEN
--   DB_USER
--   DB_PWD
--   DB_PATH
--   AUTH0_SECRET
--   AUTH0_CLIENT_ID
--   AUTH0_ISSUER_BASE
--   SPA_HOST
+## DiscoRSVP-service
 
-4. Run the app: `npm run dev` (watch mode) or `npm run start`
-5. Run unit tests: `npm t` or `npm run test`
+This repository contains the backend of DiscoRSVP, referred to as `discorsvp-service`.
+It's a Node.js project implemented in TypeScript that consists of:
 
-### Auto linting on save (VSCode)
-
--   Install the ESLint extension
--   Add the snippet below to settings.json:
-
-```
-"editor.codeActionsOnSave": {
-        "source.fixAll.eslint": true
-}
-```
+-   A Firestore database storage layer
+-   A `socket.io` based websocket to communicate with clients
+-   A Discord bot to track attendance on Discord servers

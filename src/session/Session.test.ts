@@ -1,5 +1,5 @@
-import Gizzz from './Gizzz';
-import GizzzStatus from './GizzzStatus';
+import Session from './Session';
+import SessionStatus from './types/SessionStatus';
 
 const shellChannel = {
     server: { id: 'someserver', name: 'someserver' },
@@ -8,27 +8,27 @@ const shellChannel = {
 const shellOwner = { id: 'owner', name: 'owner' };
 const shellMember = { id: 'member', name: 'member' };
 
-describe('Gizzz', () => {
+describe('Session class', () => {
     it('initializes the first instance with the owner in the squad', () => {
-        const g = new Gizzz(GizzzStatus.Pending, shellOwner, shellChannel, 4, [], []);
+        const g = new Session(SessionStatus.Pending, shellOwner, shellChannel, 4, [], []);
         expect(g.isSquadMember(g.owner));
     });
 
     it('adds a squad member that is not present in the channel', () => {
-        const g = new Gizzz(GizzzStatus.Pending, shellOwner, shellChannel, 4, [], []);
+        const g = new Session(SessionStatus.Pending, shellOwner, shellChannel, 4, [], []);
         g.addSquadMember({ id: 'member', name: 'member' });
-        expect(g.isSquadMember({ id: 'member', name: 'member' })).toBeTruthy;
+        expect(g.isSquadMember({ id: 'member', name: 'member' })).toBeTruthy();
     });
 
     it('adds a squad member that is present in the channel correctly and updates the status', () => {
-        const g = new Gizzz(GizzzStatus.Pending, shellOwner, shellChannel, 2, [], [shellMember]);
+        const g = new Session(SessionStatus.Pending, shellOwner, shellChannel, 2, [], [shellMember]);
         g.updateSquadMember(shellOwner, true);
         g.addSquadMember(shellMember);
-        expect(g.status === GizzzStatus.Complete).toBeTruthy();
+        expect(g.status === SessionStatus.Complete).toBeTruthy();
     });
 
     it('updates a squad member upon joining the channel correctly and updates the status', () => {
-        const g = new Gizzz(GizzzStatus.Pending, shellOwner, shellChannel, 2, [], []);
+        const g = new Session(SessionStatus.Pending, shellOwner, shellChannel, 2, [], []);
         g.updateSquadMember(shellOwner, true);
         g.addSquadMember(shellMember);
         expect(g.isComplete()).toBeFalsy();
@@ -37,8 +37,8 @@ describe('Gizzz', () => {
     });
 
     it('removes a squad member correctly', () => {
-        const g = new Gizzz(
-            GizzzStatus.Pending,
+        const g = new Session(
+            SessionStatus.Pending,
             shellOwner,
             shellChannel,
             3,
@@ -54,12 +54,12 @@ describe('Gizzz', () => {
     });
 
     it('evaluates people included in undefined audience correctly', () => {
-        const g = new Gizzz(GizzzStatus.Pending, shellOwner, shellChannel, 4, [], []);
+        const g = new Session(SessionStatus.Pending, shellOwner, shellChannel, 4, [], []);
         expect(g.isInAudience(shellMember)).toBeTruthy();
     });
 
     it('evaluates people included in defined audience correctly', () => {
-        const g = new Gizzz(GizzzStatus.Pending, shellOwner, shellChannel, 4, [], [], 'randomId', [
+        const g = new Session(SessionStatus.Pending, shellOwner, shellChannel, 4, [], [], 'randomId', [
             { id: 'abc', name: 'abc' },
             { id: 'def', name: 'def' },
         ]);
@@ -69,8 +69,8 @@ describe('Gizzz', () => {
     });
 
     it('serializes the object correctly', () => {
-        const g = new Gizzz(
-            GizzzStatus.Cancelled,
+        const g = new Session(
+            SessionStatus.Cancelled,
             shellOwner,
             shellChannel,
             12,
@@ -84,7 +84,7 @@ describe('Gizzz', () => {
         );
         expect(g.serialize()).toEqual({
             _id: 'randomId',
-            status: GizzzStatus.Cancelled,
+            status: SessionStatus.Cancelled,
             owner: shellOwner,
             channel: shellChannel,
             target: 12,

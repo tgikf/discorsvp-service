@@ -1,9 +1,9 @@
 import Discord, { Channel, VoiceChannel } from 'discord.js';
-import { discordEventListener } from '../gizzz/gizzzHandler';
-import SquadMember from '../gizzz/SquadMember';
-import DiscChannel from './DiscChannel';
+import { updateOnDiscordEvent } from '../session/sessionHandler';
+import DiscordUser from '../session/types/SquadMember';
+import DiscChannel from './types/DiscChannel';
 
-export default class DiscBot {
+export default class DiscordBot {
     private client = new Discord.Client();
 
     constructor() {
@@ -13,7 +13,7 @@ export default class DiscBot {
             console.log('DiscBot login successful');
         });
 
-        //https://discord.js.org/#/docs/main/master/class/VoiceState
+        // https://discord.js.org/#/docs/main/master/class/VoiceState
         this.client.on('voiceStateUpdate', (oldState, newState) => {
             /*
             cases to cover:
@@ -24,10 +24,10 @@ export default class DiscBot {
             - mute/unmute: old channel === new channel
             */
             if (oldState.channelID !== newState.channelID) {
-                const oldC = oldState.channelID
+                const oldChannel = oldState.channelID
                     ? { server: { id: oldState.guild.id }, channel: { id: oldState.channelID } }
                     : undefined;
-                const newC = newState.channelID
+                const newChannel = newState.channelID
                     ? { server: { id: newState.guild.id }, channel: { id: newState.channelID } }
                     : undefined;
 
@@ -40,11 +40,16 @@ export default class DiscBot {
                         : newState?.member?.user.username;
 
                 if (memberId && memberName) {
-                    discordEventListener({
-                        user: { id: memberId, name: memberName },
-                        oldChannel: oldC,
-                        newChannel: newC,
-                    });
+                    const user = { id: memberId, name: memberName };
+                    console.log(
+                        `User ${memberName} moved from ${JSON.stringify(oldChannel)} to ${JSON.stringify(newChannel)}}`,
+                    );
+                    if (oldChannel) {
+                        updateOnDiscordEvent(false, oldChannel, user);
+                    }
+                    if (newChannel) {
+                        updateOnDiscordEvent(true, newChannel, user);
+                    }
                 }
             }
         });
@@ -66,15 +71,14 @@ export default class DiscBot {
         return channelList;
     }
 
-    public getUserIdsByChannel(channel: DiscChannel): SquadMember[] {
+    public getUserIdsByChannel(channel: DiscChannel): DiscordUser[] {
         const voiceStates = this.client.guilds.cache
             .get(channel.server.id)
             ?.voiceStates.cache.filter((vs) => vs.channelID === channel.channel.id);
 
         return (
-            voiceStates?.map((vs) => {
-                return { id: vs.id, name: vs.member?.user.username ? vs.member.user.username : '' };
-            }) || []
+            voiceStates?.map((vs) => ({ id: vs.id, name: vs.member?.user.username ? vs.member.user.username : '' })) ||
+            []
         );
     }
 

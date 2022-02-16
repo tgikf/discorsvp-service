@@ -6,3 +6,4 @@ dist
 coverage
 .deployment
 .vscode
+*.key.*

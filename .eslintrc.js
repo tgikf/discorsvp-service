@@ -12,4 +12,5 @@ module.exports = {
     },
     plugins: ['@typescript-eslint', 'prettier'],
     rules: { 'no-underscore-dangle': 'off' },
+    ignorePatterns: ['dist'],
 };

@@ -1,7 +1,7 @@
 import DiscChannel from '../discord/types/DiscChannel';
 import SessionStatus from './types/SessionStatus';
-import SerializedSession from './types/SessionType';
-import DiscordUser from './types/SquadMember';
+import SerializedSession from './types/SerializedSession';
+import DiscordUser from './types/DiscordUser';
 
 export default class Session {
     constructor(

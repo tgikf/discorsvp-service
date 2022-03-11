@@ -1,6 +1,6 @@
 import DiscChannel from '../../discord/types/DiscChannel';
 import SessionStatus from './SessionStatus';
-import DiscordUser from './SquadMember';
+import DiscordUser from './DiscordUser';
 
 type SerializedSession = {
     id?: string;

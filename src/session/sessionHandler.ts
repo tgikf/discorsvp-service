@@ -4,8 +4,8 @@ import * as serviceAccount from '../../discorsvp.key.json';
 import Session from './Session';
 import SessionStatus from './types/SessionStatus';
 import DiscChannel from '../discord/types/DiscChannel';
-import DiscordUser from './types/SquadMember';
-import emitWebSocketUpdateEvent from '../app';
+import DiscordUser from './types/DiscordUser';
+import emitSessionUpdateEvent from '../app';
 
 initializeApp({
     credential: cert(serviceAccount as ServiceAccount),
@@ -37,7 +37,7 @@ export const updateOnDiscordEvent = async (join: boolean, channel: DiscChannel, 
             session.removeOthersMember(user);
         }
         await collection.doc(session.id!).set(session);
-        emitWebSocketUpdateEvent(session);
+        emitSessionUpdateEvent(session);
     }
     return channelSession.docs[0].data() || undefined;
 };
@@ -77,7 +77,7 @@ export const joinSquad = async (user: DiscordUser, sessionId: string) => {
         if (session && session.isPending && session.isInAudience(user) && !session.isSquadMember(user)) {
             session.addSquadMember(user);
             await collection.doc(sessionId).set(session);
-            emitWebSocketUpdateEvent(session);
+            emitSessionUpdateEvent(session);
         } else {
             throw Error('Squad join failure: user not eligible');
         }
@@ -92,7 +92,7 @@ export const leaveSquad = async (user: DiscordUser, sessionId: string) => {
         if (session && session.isPending && session.isSquadMember(user)) {
             session.removeSquadMember(user);
             await collection.doc(sessionId).set(session);
-            emitWebSocketUpdateEvent(session);
+            emitSessionUpdateEvent(session);
         } else {
             throw Error('Squad leave failure: user not eligible');
         }
@@ -107,7 +107,7 @@ export const cancelSession = async (sessionId: string, user: DiscordUser) => {
         if (session && session.isPending && session.owner === user) {
             session.status = SessionStatus.Cancelled;
             await collection.doc(sessionId).set(session);
-            emitWebSocketUpdateEvent(session);
+            emitSessionUpdateEvent(session);
         } else {
             throw Error('Session cancellation failure: session or user invalid');
         }

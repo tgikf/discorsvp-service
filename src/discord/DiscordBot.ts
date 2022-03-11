@@ -1,6 +1,6 @@
 import Discord, { Channel, VoiceChannel } from 'discord.js';
 import { updateOnDiscordEvent } from '../session/sessionHandler';
-import DiscordUser from '../session/types/SquadMember';
+import DiscordUser from '../session/types/DiscordUser';
 import DiscChannel from './types/DiscChannel';
 
 export default class DiscordBot {

@@ -1,12 +1,25 @@
 import Discord, { Channel, VoiceChannel } from 'discord.js';
-import { updateSessionOnDiscordEvent } from '../controller/writeEvents';
+import Session from '../session/Session';
 import DiscordUser from '../session/types/DiscordUser';
 import DiscChannel from './types/DiscChannel';
 
 export default class DiscordBot {
     private client = new Discord.Client();
 
-    constructor() {
+    /* 
+     callbacks to constructor required to (while preventing circular dependencies)
+     1. update session model upon discord event
+     2. emit socket event upon session update (initiated by discord event)
+    */
+    constructor(
+        updateSessionModel: (
+            user: DiscordUser,
+            join: boolean,
+            channel: DiscChannel,
+            emitSessionUpdateEvent: (session: Session) => void,
+        ) => void,
+        emitSessionUpdateEvent: (session: Session) => void,
+    ) {
         this.client.login(process.env.DISC_TOKEN);
 
         this.client.on('ready', () => {
@@ -45,10 +58,10 @@ export default class DiscordBot {
                         `User ${memberName} moved from ${JSON.stringify(oldChannel)} to ${JSON.stringify(newChannel)}}`,
                     );
                     if (oldChannel) {
-                        updateSessionOnDiscordEvent(user, false, oldChannel);
+                        updateSessionModel(user, false, oldChannel, emitSessionUpdateEvent);
                     }
                     if (newChannel) {
-                        updateSessionOnDiscordEvent(user, true, newChannel);
+                        updateSessionModel(user, true, newChannel, emitSessionUpdateEvent);
                     }
                 }
             }

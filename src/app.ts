@@ -2,10 +2,10 @@ import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import Session from './session/Session';
 import validateTokenSignature from './common/auth';
-import { getPendingSessions, getSessionHistory } from './controller/readEvents';
+import DiscordBot from './discord/DiscordBot';
+import { getPendingSessions, getSessionHistory, updateSessionModelOnDiscordEvent } from './model/sessionEvents';
 
 const sockets = new Map<string, Socket>();
-
 const httpServer = createServer();
 const io = new Server(httpServer, {
     cors: {
@@ -29,6 +29,8 @@ const emitSessionUpdateEvent = (session: Session) => {
         }
     });
 };
+
+const bot = new DiscordBot(updateSessionModelOnDiscordEvent, emitSessionUpdateEvent);
 
 io.engine.on('connection_error', (err: any) => {
     console.log(err);
@@ -65,10 +67,10 @@ io.on('connection', (socket: Socket) => {
     socket.on('connect_error', (err) => {
         console.log(`connect_error due to ${err.message}`);
     });
-    socket.on('pressed', (fn: (data: any) => void) => {
+    socket.on('pressed', async (fn: (data: any) => void) => {
         console.log(`Pressed by ${socket.data.user}`);
 
-        fn({ anyproperty: 'anyvalue', arrayproperty: ['abc', 'def', 'ghi'] });
+        fn(await bot.getAllChannelIds());
     });
 });
 

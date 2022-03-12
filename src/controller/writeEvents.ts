@@ -1,28 +1,12 @@
-import { initializeApp, cert, ServiceAccount } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
-import * as serviceAccount from '../../discorsvp.key.json';
-import Session from './Session';
-import SessionStatus from './types/SessionStatus';
+import Session from '../session/Session';
+import SessionStatus from '../session/types/SessionStatus';
 import DiscChannel from '../discord/types/DiscChannel';
-import DiscordUser from './types/DiscordUser';
+import DiscordUser from '../session/types/DiscordUser';
 import emitSessionUpdateEvent from '../app';
+import sessionCollection from '../model/sessionCollection';
 
-initializeApp({
-    credential: cert(serviceAccount as ServiceAccount),
-});
-
-const converter = {
-    toFirestore: (data: Session) => data.serialize(),
-    fromFirestore: (snap: FirebaseFirestore.QueryDocumentSnapshot) => {
-        const { status, owner, channel, target, squad, others, id, audience } = snap.data();
-        return new Session(status, owner, channel, target, squad, others, id, audience);
-    },
-};
-
-const collection = getFirestore().collection('sessions').withConverter(converter);
-
-export const updateOnDiscordEvent = async (join: boolean, channel: DiscChannel, user: { id: string; name: string }) => {
-    const channelSession = await collection
+export const updateSessionOnDiscordEvent = async (user: DiscordUser, join: boolean, channel: DiscChannel) => {
+    const channelSession = await sessionCollection
         .where('channel', '==', channel)
         .where('status', '==', SessionStatus.Pending)
         .get();
@@ -36,7 +20,7 @@ export const updateOnDiscordEvent = async (join: boolean, channel: DiscChannel, 
         } else {
             session.removeOthersMember(user);
         }
-        await collection.doc(session.id!).set(session);
+        await sessionCollection.doc(session.id!).set(session);
         emitSessionUpdateEvent(session);
     }
     return channelSession.docs[0].data() || undefined;
@@ -49,18 +33,18 @@ export const createSession = async (
     others: DiscordUser[],
     audience?: DiscordUser[],
 ) => {
-    const pendingSessionOwner = await collection
-        .where('owner', '==', owner)
+    const pendingSessionOwner = await sessionCollection
+        .where('owner.id', '==', owner.id)
         .where('status', '==', SessionStatus.Pending)
         .get();
     if (pendingSessionOwner.empty) {
-        const pendingSessionChannel = await collection
+        const pendingSessionChannel = await sessionCollection
             .where('channel', '==', channel)
             .where('status', '==', SessionStatus.Pending)
             .get();
         if (pendingSessionChannel.empty) {
-            const res = await collection.add(
-                new Session(SessionStatus.Pending, owner, channel, target, [], others, undefined, audience),
+            const res = await sessionCollection.add(
+                new Session(SessionStatus.Pending, owner, channel, target, [], others, audience),
             );
             return res.id;
         }
@@ -71,12 +55,12 @@ export const createSession = async (
 };
 
 export const joinSquad = async (user: DiscordUser, sessionId: string) => {
-    const sessionResult = await collection.doc(sessionId).get();
+    const sessionResult = await sessionCollection.doc(sessionId).get();
     if (sessionResult.exists) {
         const session = sessionResult.data();
         if (session && session.isPending && session.isInAudience(user) && !session.isSquadMember(user)) {
             session.addSquadMember(user);
-            await collection.doc(sessionId).set(session);
+            await sessionCollection.doc(sessionId).set(session);
             emitSessionUpdateEvent(session);
         } else {
             throw Error('Squad join failure: user not eligible');
@@ -86,12 +70,12 @@ export const joinSquad = async (user: DiscordUser, sessionId: string) => {
 };
 
 export const leaveSquad = async (user: DiscordUser, sessionId: string) => {
-    const sessionResult = await collection.doc(sessionId).get();
+    const sessionResult = await sessionCollection.doc(sessionId).get();
     if (sessionResult.exists) {
         const session = sessionResult.data();
         if (session && session.isPending && session.isSquadMember(user)) {
             session.removeSquadMember(user);
-            await collection.doc(sessionId).set(session);
+            await sessionCollection.doc(sessionId).set(session);
             emitSessionUpdateEvent(session);
         } else {
             throw Error('Squad leave failure: user not eligible');
@@ -100,13 +84,13 @@ export const leaveSquad = async (user: DiscordUser, sessionId: string) => {
     throw Error('Squad leave failure: session not found');
 };
 
-export const cancelSession = async (sessionId: string, user: DiscordUser) => {
-    const sessionResult = await collection.doc(sessionId).get();
+export const cancelSession = async (user: DiscordUser, sessionId: string) => {
+    const sessionResult = await sessionCollection.doc(sessionId).get();
     if (sessionResult.exists) {
         const session = sessionResult.data();
-        if (session && session.isPending && session.owner === user) {
+        if (session && session.isPending && session.owner.id === user.id) {
             session.status = SessionStatus.Cancelled;
-            await collection.doc(sessionId).set(session);
+            await sessionCollection.doc(sessionId).set(session);
             emitSessionUpdateEvent(session);
         } else {
             throw Error('Session cancellation failure: session or user invalid');

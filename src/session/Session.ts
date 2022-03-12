@@ -11,8 +11,8 @@ export default class Session {
         private _target: number,
         private _squad: { member: DiscordUser; hasJoined: boolean }[],
         private _others: DiscordUser[],
+        private _audience: DiscordUser[] = [{ id: 'no', name: 'audience' }],
         private _id?: string,
-        private _audience?: DiscordUser[],
     ) {
         if (_squad.length === 0) {
             // initialize only when the Session is created (i.e. first instantiation)

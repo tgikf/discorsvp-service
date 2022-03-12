@@ -1,5 +1,5 @@
 import Discord, { Channel, VoiceChannel } from 'discord.js';
-import { updateOnDiscordEvent } from '../session/sessionHandler';
+import { updateSessionOnDiscordEvent } from '../controller/writeEvents';
 import DiscordUser from '../session/types/DiscordUser';
 import DiscChannel from './types/DiscChannel';
 
@@ -45,10 +45,10 @@ export default class DiscordBot {
                         `User ${memberName} moved from ${JSON.stringify(oldChannel)} to ${JSON.stringify(newChannel)}}`,
                     );
                     if (oldChannel) {
-                        updateOnDiscordEvent(false, oldChannel, user);
+                        updateSessionOnDiscordEvent(user, false, oldChannel);
                     }
                     if (newChannel) {
-                        updateOnDiscordEvent(true, newChannel, user);
+                        updateSessionOnDiscordEvent(user, true, newChannel);
                     }
                 }
             }

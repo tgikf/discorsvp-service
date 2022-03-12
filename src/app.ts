@@ -2,6 +2,7 @@ import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import Session from './session/Session';
 import validateTokenSignature from './common/auth';
+import { getPendingSessions, getSessionHistory } from './controller/readEvents';
 
 const sockets = new Map<string, Socket>();
 
@@ -13,11 +14,24 @@ const io = new Server(httpServer, {
     allowEIO3: true,
 });
 
-io.engine.on('connection_error', (err: { req: any; code: any; message: any; context: any }) => {
-    // console.log(err.req); // the request object
-    // console.log(err.code); // the error code, for example 1
-    console.log(err.message); // the error message, for example "Session ID unknown"
-    console.log(err.context); // some additional error context
+const emitFullLoadEvent = async (socket: Socket) => {
+    const profileData = { sessionHistory: await getSessionHistory({ id: socket.data.user }) };
+    const homeData = { pendingSessions: await getPendingSessions({ id: socket.data.user }) };
+    socket.emit('FullLoad', homeData, profileData);
+};
+
+const emitSessionUpdateEvent = (session: Session) => {
+    Array.from(sockets.keys()).forEach((client) => {
+        if (session.squad.find((member) => member.member.id === client) && session.isComplete()) {
+            sockets.get(client)?.emit('SessionUpdate', session, true);
+        } else {
+            sockets.get(client)?.emit('SessionUpdate', session, false);
+        }
+    });
+};
+
+io.engine.on('connection_error', (err: any) => {
+    console.log(err);
 });
 
 io.use(async (socket, next) => {
@@ -40,13 +54,10 @@ io.use(async (socket, next) => {
 });
 
 io.on('connection', (socket: Socket) => {
-    // @ts-ignore
     console.log(`Socket opened ${socket.data.user}`);
+    sockets.set(socket.data.user, socket);
 
-    if (!sockets.get(socket.data.user)) {
-        sockets.set(socket.data.user, socket);
-    }
-
+    emitFullLoadEvent(socket);
     socket.on('request', (data) => {
         console.log('request received with', data, socket.handshake);
     });
@@ -54,18 +65,13 @@ io.on('connection', (socket: Socket) => {
     socket.on('connect_error', (err) => {
         console.log(`connect_error due to ${err.message}`);
     });
+    socket.on('pressed', (fn: (data: any) => void) => {
+        console.log(`Pressed by ${socket.data.user}`);
+
+        fn({ anyproperty: 'anyvalue', arrayproperty: ['abc', 'def', 'ghi'] });
+    });
 });
 
 httpServer.listen(3000);
-
-const emitSessionUpdateEvent = (session: Session) => {
-    Array.from(sockets.keys()).forEach((client) => {
-        if (session.squad.find((member) => member.member.id === client) && session.isComplete()) {
-            sockets.get(client)?.volatile.emit('SessionUpdate', session, true);
-        } else {
-            sockets.get(client)?.volatile.emit('SessionUpdate', session, false);
-        }
-    });
-};
 
 export default emitSessionUpdateEvent;

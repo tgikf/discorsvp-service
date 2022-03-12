@@ -59,10 +59,19 @@ describe('Session class', () => {
     });
 
     it('evaluates people included in defined audience correctly', () => {
-        const g = new Session(SessionStatus.Pending, shellOwner, shellChannel, 4, [], [], 'randomId', [
-            { id: 'abc', name: 'abc' },
-            { id: 'def', name: 'def' },
-        ]);
+        const g = new Session(
+            SessionStatus.Pending,
+            shellOwner,
+            shellChannel,
+            4,
+            [],
+            [],
+            [
+                { id: 'abc', name: 'abc' },
+                { id: 'def', name: 'def' },
+            ],
+            'randomId',
+        );
         expect(g.isInAudience({ id: 'abc', name: 'abc' })).toBeTruthy();
         expect(g.isInAudience({ id: 'def', name: 'def' })).toBeTruthy();
         expect(g.isInAudience({ id: 'anyone', name: 'anyone' })).toBeFalsy();
@@ -76,11 +85,11 @@ describe('Session class', () => {
             12,
             [{ member: { id: 'memba', name: 'memba' }, hasJoined: true }],
             [],
-            'randomId',
             [
                 { id: 'abc', name: 'abc' },
                 { id: 'def', name: 'def' },
             ],
+            'randomId',
         );
         expect(g.serialize()).toEqual({
             _id: 'randomId',

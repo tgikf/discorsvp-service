@@ -1,6 +1,6 @@
 type DiscordUser = {
     id: string;
-    name: string;
+    name?: string;
 };
 
 export default DiscordUser;

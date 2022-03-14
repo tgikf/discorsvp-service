@@ -3,7 +3,13 @@ import { Server, Socket } from 'socket.io';
 import Session from './session/Session';
 import validateTokenSignature from './common/auth';
 import DiscordBot from './discord/DiscordBot';
-import { getPendingSessions, getSessionHistory, updateSessionModelOnDiscordEvent } from './model/sessionEvents';
+import {
+    createSession,
+    getPendingSessions,
+    getSessionHistory,
+    updateSessionModelOnDiscordEvent,
+} from './model/sessionEvents';
+import DiscChannel from './discord/types/DiscChannel';
 
 const sockets = new Map<string, Socket>();
 const httpServer = createServer();
@@ -60,17 +66,38 @@ io.on('connection', (socket: Socket) => {
     sockets.set(socket.data.user, socket);
 
     emitFullLoadEvent(socket);
-    socket.on('request', (data) => {
-        console.log('request received with', data, socket.handshake);
-    });
+    socket.on(
+        'CreateSession',
+        async (data: { channel: DiscChannel; target: number }, acknowledge: (data: any) => void) => {
+            const userName = await bot.getUserDisplayName(socket.data.user);
+            const owner = { id: socket.data.user, name: userName };
+            const allChannelMembers = await bot.getUserIdsByChannel(data.channel);
+            const ownerIndex = allChannelMembers.findIndex((e) => e.id === owner.id);
+            const others = ownerIndex >= 0 ? allChannelMembers.splice(ownerIndex, 1) : allChannelMembers;
+
+            try {
+                const id = await createSession(
+                    owner,
+                    data.channel,
+                    data.target,
+                    [{ member: owner, hasJoined: ownerIndex >= 0 }],
+                    others,
+                );
+                acknowledge({ success: true, message: `session created ${id}` });
+            } catch (e) {
+                console.log('this', e);
+                acknowledge({ success: false, message: `${e}` });
+            }
+        },
+    );
 
     socket.on('connect_error', (err) => {
         console.log(`connect_error due to ${err.message}`);
     });
-    socket.on('pressed', async (fn: (data: any) => void) => {
+    socket.on('GetChannels', async (acknowledge: (data: any) => void) => {
         console.log(`Pressed by ${socket.data.user}`);
 
-        fn(await bot.getAllChannelIds());
+        acknowledge(await bot.getAllChannelIds());
     });
 });
 

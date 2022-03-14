@@ -70,7 +70,6 @@ describe('Session class', () => {
                 { id: 'abc', name: 'abc' },
                 { id: 'def', name: 'def' },
             ],
-            'randomId',
         );
         expect(g.isInAudience({ id: 'abc', name: 'abc' })).toBeTruthy();
         expect(g.isInAudience({ id: 'def', name: 'def' })).toBeTruthy();
@@ -89,7 +88,6 @@ describe('Session class', () => {
                 { id: 'abc', name: 'abc' },
                 { id: 'def', name: 'def' },
             ],
-            'randomId',
         );
         expect(g.serialize()).toEqual({
             _id: 'randomId',

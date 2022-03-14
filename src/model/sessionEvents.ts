@@ -11,10 +11,13 @@ initializeApp({
 });
 
 const converter = {
-    toFirestore: (data: Session) => data.serialize(),
+    toFirestore: (data: Session) => {
+        console.log('called', data.serialize());
+        return data.serialize();
+    },
     fromFirestore: (snap: FirebaseFirestore.QueryDocumentSnapshot) => {
-        const { status, owner, channel, target, squad, others, audience, id } = snap.data();
-        return new Session(status, owner, channel, target, squad, others, audience, id);
+        const { status, owner, channel, target, squad, others, audience } = snap.data();
+        return new Session(status, owner, channel, target, squad, others, audience);
     },
 };
 
@@ -40,7 +43,7 @@ export const updateSessionModelOnDiscordEvent = async (
         } else {
             session.removeOthersMember(user);
         }
-        await sessionCollection.doc(session.id!).set(session);
+        await sessionCollection.doc(channelSession.docs[0].id).set(session);
         emitEventCallback(session);
     }
 };
@@ -49,6 +52,7 @@ export const createSession = async (
     owner: DiscordUser,
     channel: DiscChannel,
     target: number,
+    squad: { member: DiscordUser; hasJoined: boolean }[],
     others: DiscordUser[],
     audience?: DiscordUser[],
 ) => {
@@ -63,7 +67,7 @@ export const createSession = async (
             .get();
         if (pendingSessionChannel.empty) {
             const res = await sessionCollection.add(
-                new Session(SessionStatus.Pending, owner, channel, target, [], others, audience),
+                new Session(SessionStatus.Pending, owner, channel, target, squad, others, audience),
             );
             return res.id;
         }
@@ -136,7 +140,7 @@ export const getPendingSessions = async (user: DiscordUser) => {
         .where('audience', 'array-contains-any', [user, { id: 'no', name: 'audience' }])
         .get();
 
-    return pendingSessions.docs.map((e) => e.data());
+    return pendingSessions.docs.map((e) => ({ id: e.id, session: e.data() }));
 };
 
 export const getSessionHistory = async (user: DiscordUser) => {
@@ -147,5 +151,8 @@ export const getSessionHistory = async (user: DiscordUser) => {
 
     const squadMemberHistory = await sessionCollection.where('squad', 'array-contains', user).get();
 
-    return [...ownerHistory.docs.map((e) => e.data()), ...squadMemberHistory.docs.map((e) => e.data)];
+    return [
+        ...ownerHistory.docs.map((e) => ({ id: e.id, session: e.data() })),
+        ...squadMemberHistory.docs.map((e) => ({ id: e.id, session: e.data() })),
+    ];
 };

@@ -12,7 +12,6 @@ export default class Session {
         private _squad: { member: DiscordUser; hasJoined: boolean }[],
         private _others: DiscordUser[],
         private _audience: DiscordUser[] = [{ id: 'no', name: 'audience' }],
-        private _id?: string,
     ) {
         if (_squad.length === 0) {
             // initialize only when the Session is created (i.e. first instantiation)
@@ -33,10 +32,6 @@ export default class Session {
         return this._squad;
     }
 
-    get id(): string | undefined {
-        return this._id;
-    }
-
     get status(): SessionStatus {
         return this._status;
     }
@@ -55,7 +50,6 @@ export default class Session {
 
     public serialize(): SerializedSession {
         return {
-            id: this._id || undefined,
             status: this._status,
             owner: this._owner,
             channel: this._channel,

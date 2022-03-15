@@ -83,10 +83,9 @@ io.on('connection', (socket: Socket) => {
                     [{ member: owner, hasJoined: ownerIndex >= 0 }],
                     others,
                 );
-                acknowledge({ success: true, message: `session created ${id}` });
+                acknowledge(JSON.stringify({ success: true, message: `session created ${id}` }));
             } catch (e) {
-                console.log('this', e);
-                acknowledge({ success: false, message: `${e}` });
+                acknowledge(JSON.stringify({ success: false, message: `${e}` }));
             }
         },
     );
@@ -95,8 +94,6 @@ io.on('connection', (socket: Socket) => {
         console.log(`connect_error due to ${err.message}`);
     });
     socket.on('GetChannels', async (acknowledge: (data: any) => void) => {
-        console.log(`Pressed by ${socket.data.user}`);
-
         acknowledge(await bot.getAllChannelIds());
     });
 });

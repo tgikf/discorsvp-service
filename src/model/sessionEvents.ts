@@ -140,7 +140,7 @@ export const getPendingSessions = async (user: DiscordUser) => {
         .where('audience', 'array-contains-any', [user, { id: 'no', name: 'audience' }])
         .get();
 
-    return pendingSessions.docs.map((e) => ({ id: e.id, session: e.data() }));
+    return pendingSessions.docs.map((e) => ({ id: e.id, session: e.data().serialize() }));
 };
 
 export const getSessionHistory = async (user: DiscordUser) => {
@@ -152,7 +152,7 @@ export const getSessionHistory = async (user: DiscordUser) => {
     const squadMemberHistory = await sessionCollection.where('squad', 'array-contains', user).get();
 
     return [
-        ...ownerHistory.docs.map((e) => ({ id: e.id, session: e.data() })),
-        ...squadMemberHistory.docs.map((e) => ({ id: e.id, session: e.data() })),
+        ...ownerHistory.docs.map((e) => ({ id: e.id, session: e.data().serialize() })),
+        ...squadMemberHistory.docs.map((e) => ({ id: e.id, session: e.data().serialize() })),
     ];
 };

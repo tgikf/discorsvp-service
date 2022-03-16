@@ -9,7 +9,7 @@ type SerializedSession = {
     channel: DiscChannel;
     target: number;
     audience?: DiscordUser[];
-    squad: { member: DiscordUser; hasJoined: boolean }[];
+    squad: { member: DiscordUser; hasConnected: boolean }[];
     others: DiscordUser[];
 };
 

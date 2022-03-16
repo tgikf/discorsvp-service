@@ -43,9 +43,9 @@ describe('Session class', () => {
             shellChannel,
             3,
             [
-                { member: shellOwner, hasJoined: false },
-                { member: { id: 'member3', name: 'member3' }, hasJoined: true },
-                { member: { id: 'member4', name: 'member4' }, hasJoined: true },
+                { member: shellOwner, hasConnected: false },
+                { member: { id: 'member3', name: 'member3' }, hasConnected: true },
+                { member: { id: 'member4', name: 'member4' }, hasConnected: true },
             ],
             [],
         );
@@ -82,7 +82,7 @@ describe('Session class', () => {
             shellOwner,
             shellChannel,
             12,
-            [{ member: { id: 'memba', name: 'memba' }, hasJoined: true }],
+            [{ member: { id: 'memba', name: 'memba' }, hasConnected: true }],
             [],
             [
                 { id: 'abc', name: 'abc' },
@@ -99,7 +99,7 @@ describe('Session class', () => {
                 { id: 'abc', name: 'abc' },
                 { id: 'def', name: 'def' },
             ],
-            squad: [{ member: { id: 'memba', name: 'memba' }, hasJoined: true }],
+            squad: [{ member: { id: 'memba', name: 'memba' }, hasConnected: true }],
             others: [],
         });
     });

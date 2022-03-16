@@ -16,9 +16,9 @@ export default class DiscordBot {
             user: DiscordUser,
             join: boolean,
             channel: DiscChannel,
-            emitSessionUpdateEvent: (session: Session) => void,
+            emitSessionUpdateEvent: (sessionId: string, session: Session) => void,
         ) => void,
-        emitSessionUpdateEvent: (session: Session) => void,
+        emitSessionUpdateEvent: (sessionId: string, session: Session) => void,
     ) {
         this.client.login(process.env.DISC_TOKEN);
 

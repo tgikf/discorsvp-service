@@ -4,12 +4,16 @@ import Session from './session/Session';
 import validateTokenSignature from './common/auth';
 import DiscordBot from './discord/DiscordBot';
 import {
+    cancelSession,
     createSession,
     getPendingSessions,
     getSessionHistory,
+    joinSquad,
+    leaveSquad,
     updateSessionModelOnDiscordEvent,
 } from './model/sessionEvents';
 import DiscChannel from './discord/types/DiscChannel';
+import SessionAction from './session/types/SessionAction';
 
 const sockets = new Map<string, Socket>();
 const httpServer = createServer();
@@ -20,19 +24,9 @@ const io = new Server(httpServer, {
     allowEIO3: true,
 });
 
-const emitFullLoadEvent = async (socket: Socket) => {
-    const profileData = { sessionHistory: await getSessionHistory({ id: socket.data.user }) };
-    const homeData = { pendingSessions: await getPendingSessions({ id: socket.data.user }) };
-    socket.emit('FullLoad', homeData, profileData);
-};
-
-const emitSessionUpdateEvent = (session: Session) => {
+const emitSessionUpdateEvent = (sessionId: string, session: Session) => {
     Array.from(sockets.keys()).forEach((client) => {
-        if (session.squad.find((member) => member.member.id === client) && session.isComplete()) {
-            sockets.get(client)?.emit('SessionUpdate', session, true);
-        } else {
-            sockets.get(client)?.emit('SessionUpdate', session, false);
-        }
+        sockets.get(client)?.emit('SessionUpdate', JSON.stringify({ id: sessionId, ...session.serialize() }));
     });
 };
 
@@ -61,27 +55,26 @@ io.use(async (socket, next) => {
     }
 });
 
-io.on('connection', (socket: Socket) => {
+io.on('connection', async (socket: Socket) => {
     console.log(`Socket opened ${socket.data.user}`);
     sockets.set(socket.data.user, socket);
-
-    emitFullLoadEvent(socket);
+    const userName = await bot.getUserDisplayName(socket.data.user);
+    const currentUser = { id: socket.data.user, name: userName };
     socket.on(
         'CreateSession',
         async (data: { channel: DiscChannel; target: number }, acknowledge: (data: any) => void) => {
-            const userName = await bot.getUserDisplayName(socket.data.user);
-            const owner = { id: socket.data.user, name: userName };
             const allChannelMembers = await bot.getUserIdsByChannel(data.channel);
-            const ownerIndex = allChannelMembers.findIndex((e) => e.id === owner.id);
+            const ownerIndex = allChannelMembers.findIndex((e) => e.id === currentUser.id);
             const others = ownerIndex >= 0 ? allChannelMembers.splice(ownerIndex, 1) : allChannelMembers;
 
             try {
                 const id = await createSession(
-                    owner,
+                    currentUser,
                     data.channel,
                     data.target,
-                    [{ member: owner, hasJoined: ownerIndex >= 0 }],
+                    [{ member: currentUser, hasConnected: ownerIndex >= 0 }],
                     others,
+                    emitSessionUpdateEvent,
                 );
                 acknowledge(JSON.stringify({ success: true, message: `session created ${id}` }));
             } catch (e) {
@@ -93,9 +86,66 @@ io.on('connection', (socket: Socket) => {
     socket.on('connect_error', (err) => {
         console.log(`connect_error due to ${err.message}`);
     });
-    socket.on('GetChannels', async (acknowledge: (data: any) => void) => {
+    socket.on('GetChannels', async (acknowledge: (response: any) => void) => {
         acknowledge(await bot.getAllChannelIds());
     });
+
+    socket.on('GetPendingSessions', async (acknowledge: (response: any) => void) =>
+        acknowledge(JSON.stringify(await getPendingSessions(currentUser))),
+    );
+
+    socket.on('GetUserHistory', async (acknowledge: (response: any) => void) =>
+        acknowledge(JSON.stringify(await getSessionHistory(currentUser))),
+    );
+
+    socket.on(
+        'SessionAction',
+        async (data: { sessionId: string; action: SessionAction }, acknowledge: (response: any) => void) => {
+            const { sessionId, action } = data;
+            switch (action) {
+                case SessionAction.Join:
+                    try {
+                        const status = await joinSquad(currentUser, sessionId, emitSessionUpdateEvent);
+                        if (status) {
+                            acknowledge(JSON.stringify({ success: true, message: `Left squad.` }));
+                        } else {
+                            acknowledge(JSON.stringify({ success: false, message: `An error occured.` }));
+                        }
+                    } catch (e) {
+                        acknowledge(JSON.stringify({ success: false, message: `${e}` }));
+                    }
+                    break;
+                case SessionAction.Leave:
+                    try {
+                        const status = await leaveSquad(currentUser, sessionId, emitSessionUpdateEvent);
+                        if (status) {
+                            acknowledge(JSON.stringify({ success: true, message: `Left squad.` }));
+                        } else {
+                            acknowledge(JSON.stringify({ success: false, message: `An error occured.` }));
+                        }
+                    } catch (e) {
+                        acknowledge(JSON.stringify({ success: false, message: `${e}` }));
+                    }
+                    break;
+                case SessionAction.Cancel:
+                    try {
+                        const status = await cancelSession(currentUser, sessionId, emitSessionUpdateEvent);
+                        if (status) {
+                            acknowledge(JSON.stringify({ success: true, message: `Cancelled session.` }));
+                        } else {
+                            acknowledge(JSON.stringify({ success: false, message: `An error occured.` }));
+                        }
+                    } catch (e) {
+                        acknowledge(JSON.stringify({ success: false, message: `${e}` }));
+                    }
+                    break;
+                default:
+                    throw Error(`InvalidSession Action:${action}`);
+            }
+
+            acknowledge('action acknowledged');
+        },
+    );
 });
 
 httpServer.listen(3000);

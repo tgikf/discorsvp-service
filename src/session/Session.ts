@@ -9,7 +9,7 @@ export default class Session {
         private _owner: DiscordUser,
         private _channel: DiscChannel,
         private _target: number,
-        private _squad: { member: DiscordUser; hasJoined: boolean }[],
+        private _squad: { member: DiscordUser; hasConnected: boolean }[],
         private _others: DiscordUser[],
         private _audience: DiscordUser[] = [{ id: 'no', name: 'audience' }],
     ) {
@@ -28,7 +28,7 @@ export default class Session {
         return this._owner;
     }
 
-    get squad(): { member: DiscordUser; hasJoined: boolean }[] {
+    get squad(): { member: DiscordUser; hasConnected: boolean }[] {
         return this._squad;
     }
 
@@ -73,23 +73,23 @@ export default class Session {
     }
 
     public addSquadMember(member: DiscordUser): void {
-        let hasJoined = false;
+        let hasConnected = false;
         if (this.isOthersMember(member)) {
-            hasJoined = true;
+            hasConnected = true;
             this.removeOthersMember(member);
         }
-        this._squad.push({ member, hasJoined });
+        this._squad.push({ member, hasConnected });
         this.updateStatus();
     }
 
-    public updateSquadMember(member: DiscordUser, hasJoined: boolean): void {
+    public updateSquadMember(member: DiscordUser, hasConnected: boolean): void {
         const i = this._squad.findIndex((m) => m.member.id === member.id);
-        this._squad[i] = { member, hasJoined };
+        this._squad[i] = { member, hasConnected };
         this.updateStatus();
     }
 
     public removeSquadMember(member: DiscordUser): void {
-        if (this._squad.find((m) => m.member.id === member.id)?.hasJoined) {
+        if (this._squad.find((m) => m.member.id === member.id)?.hasConnected) {
             this.addOthersMember(member);
         }
         this._squad = this._squad.filter((e) => e.member.id !== member.id);
@@ -107,7 +107,7 @@ export default class Session {
         if (
             this.isSquadMember(this._owner) &&
             this._squad.length === this._target &&
-            this._squad.find((m) => m.hasJoined === false) === undefined
+            this._squad.find((m) => m.hasConnected === false) === undefined
         ) {
             this._status = SessionStatus.Complete;
         }

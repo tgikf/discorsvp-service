@@ -66,7 +66,6 @@ io.on('connection', async (socket: Socket) => {
             const allChannelMembers = await bot.getUserIdsByChannel(data.channel);
             const ownerIndex = allChannelMembers.findIndex((e) => e.id === currentUser.id);
             const others = ownerIndex >= 0 ? allChannelMembers.splice(ownerIndex, 1) : allChannelMembers;
-
             try {
                 const id = await createSession(
                     currentUser,
@@ -107,7 +106,7 @@ io.on('connection', async (socket: Socket) => {
                     try {
                         const status = await joinSquad(currentUser, sessionId, emitSessionUpdateEvent);
                         if (status) {
-                            acknowledge(JSON.stringify({ success: true, message: `Left squad.` }));
+                            acknowledge(JSON.stringify({ success: true, message: `Joined squad.` }));
                         } else {
                             acknowledge(JSON.stringify({ success: false, message: `An error occured.` }));
                         }

@@ -13,8 +13,8 @@ initializeApp({
 const converter = {
     toFirestore: (data: Session) => data.serialize(),
     fromFirestore: (snap: FirebaseFirestore.QueryDocumentSnapshot) => {
-        const { status, owner, channel, target, squad, others, audience } = snap.data();
-        return new Session(status, owner, channel, target, squad, others, audience);
+        const { status, owner, channel, target, squad, others, audience, created } = snap.data();
+        return new Session(status, owner, channel, target, squad, others, audience, created.toDate());
     },
 };
 
@@ -85,6 +85,7 @@ export const joinSquad = async (
             .where('squad', 'array-contains', [user])
             .where('status', '==', SessionStatus.Pending)
             .get();
+
         const session = sessionResult.data();
         if (
             pendingSessionUser.empty &&
@@ -145,6 +146,7 @@ export const getPendingSessions = async (user: DiscordUser) => {
     const pendingSessions = await sessionCollection
         .where('status', '==', SessionStatus.Pending)
         .where('audience', 'array-contains-any', [user, { id: 'no', name: 'audience' }])
+        .orderBy('created')
         .get();
 
     const sorted = pendingSessions.docs
@@ -154,20 +156,17 @@ export const getPendingSessions = async (user: DiscordUser) => {
             if (b.owner.id === user.id || b.squad.find((e) => e.member.id === user.id)) return 1;
             return 0;
         });
-
     return sorted;
 };
 
 export const getSessionHistory = async (user: DiscordUser) => {
-    const ownerHistory = await sessionCollection
-        .where('owner.id', '==', user.id)
-        .where('squad', 'array-contains', user)
+    const userHistory = await sessionCollection
+        .where('squad', 'array-contains-any', [
+            { member: user, hasConnected: false },
+            { member: user, hasConnected: true },
+        ])
+        .orderBy('created', 'desc')
         .get();
 
-    const squadMemberHistory = await sessionCollection.where('squad', 'array-contains', user).get();
-
-    return [
-        ...ownerHistory.docs.map((e) => ({ id: e.id, session: e.data().serialize() })),
-        ...squadMemberHistory.docs.map((e) => ({ id: e.id, session: e.data().serialize() })),
-    ];
+    return userHistory.docs.map((e) => ({ id: e.id, ...e.data().serialize() }));
 };

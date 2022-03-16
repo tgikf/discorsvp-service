@@ -11,6 +11,7 @@ type SerializedSession = {
     audience?: DiscordUser[];
     squad: { member: DiscordUser; hasConnected: boolean }[];
     others: DiscordUser[];
+    created: Date;
 };
 
 export default SerializedSession;

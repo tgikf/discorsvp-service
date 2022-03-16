@@ -12,6 +12,7 @@ export default class Session {
         private _squad: { member: DiscordUser; hasConnected: boolean }[],
         private _others: DiscordUser[],
         private _audience: DiscordUser[] = [{ id: 'no', name: 'audience' }],
+        private _created: Date = new Date(),
     ) {
         if (_squad.length === 0) {
             // initialize only when the Session is created (i.e. first instantiation)
@@ -57,13 +58,13 @@ export default class Session {
             audience: this._audience,
             squad: this._squad,
             others: this._others,
+            created: this._created,
         };
     }
 
     public isInAudience(user: DiscordUser): boolean {
         return (
-            this._audience === undefined ||
-            this._audience.length === 0 ||
+            (this._audience.length === 1 && this._audience[0].id === 'no') ||
             this._audience.find((u) => u.id === user.id) !== undefined
         );
     }

@@ -27,7 +27,7 @@ export const updateSessionModelOnDiscordEvent = async (
     emitEventCallback: (sessionId: string, stringsession: Session) => void,
 ) => {
     const channelSession = await sessionCollection
-        .where('channel.channel.id', '==', channel.channel.id)
+        .where('channel.serverChannelId', '==', channel.serverChannelId)
         .where('status', '==', SessionStatus.Pending)
         .get();
     if (!channelSession.empty) {
@@ -59,7 +59,7 @@ export const createSession = async (
         .get();
     if (pendingSessionOwner.empty) {
         const pendingSessionChannel = await sessionCollection
-            .where('channel.channel.id', '==', channel.channel.id)
+            .where('channel.serverChannelId', '==', channel.serverChannelId)
             .where('status', '==', SessionStatus.Pending)
             .get();
         if (pendingSessionChannel.empty) {

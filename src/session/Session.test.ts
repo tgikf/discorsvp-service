@@ -2,6 +2,7 @@ import Session from './Session';
 import SessionStatus from './types/SessionStatus';
 
 const shellChannel = {
+    serverChannelId: 'abc',
     server: { id: 'someserver', name: 'someserver' },
     channel: { id: 'somechannel', name: 'somechannel' },
 };

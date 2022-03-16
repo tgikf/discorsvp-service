@@ -38,10 +38,18 @@ export default class DiscordBot {
             */
             if (oldState.channelID !== newState.channelID) {
                 const oldChannel = oldState.channelID
-                    ? { server: { id: oldState.guild.id }, channel: { id: oldState.channelID } }
+                    ? {
+                          serverChannelId: `${oldState.guild.id}${oldState.channelID}`,
+                          server: { id: oldState.guild.id },
+                          channel: { id: oldState.channelID },
+                      }
                     : undefined;
                 const newChannel = newState.channelID
-                    ? { server: { id: newState.guild.id }, channel: { id: newState.channelID } }
+                    ? {
+                          serverChannelId: `${newState.guild.id}${newState.channelID}`,
+                          server: { id: newState.guild.id },
+                          channel: { id: newState.channelID },
+                      }
                     : undefined;
 
                 const memberId =
@@ -75,6 +83,7 @@ export default class DiscordBot {
         [...this.client.channels.cache].forEach((c) => {
             if (isVoiceChannel(c[1]) && !c[1].deleted) {
                 channelList.push({
+                    serverChannelId: `${c[1].guild.id}${c[1].id}`,
                     server: { id: c[1].guild.id, name: c[1].guild.name },
                     channel: { id: c[1].id, name: c[1].name },
                 });

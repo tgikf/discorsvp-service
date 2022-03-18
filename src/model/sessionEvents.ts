@@ -53,9 +53,11 @@ export const createSession = async (
     emitEventCallback: (sessionId: string, stringsession: Session) => void,
     audience?: DiscordUser[],
 ) => {
-    // should this contain a check for pending squadMember session?
     const pendingSessionOwner = await sessionCollection
-        .where('owner.id', '==', owner.id)
+        .where('squad', 'array-contains-any', [
+            { member: owner, hasConnected: false },
+            { member: owner, hasConnected: true },
+        ])
         .where('status', '==', SessionStatus.Pending)
         .get();
     if (pendingSessionOwner.empty) {
@@ -71,7 +73,7 @@ export const createSession = async (
         }
         throw Error('Channel already has a pending session.');
     } else {
-        throw Error('Owner already has a pending session.');
+        throw Error('You have already joined another ongoing session.');
     }
 };
 

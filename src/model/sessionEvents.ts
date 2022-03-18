@@ -53,6 +53,7 @@ export const createSession = async (
     emitEventCallback: (sessionId: string, stringsession: Session) => void,
     audience?: DiscordUser[],
 ) => {
+    // should this contain a check for pending squadMember session?
     const pendingSessionOwner = await sessionCollection
         .where('owner.id', '==', owner.id)
         .where('status', '==', SessionStatus.Pending)
@@ -146,7 +147,7 @@ export const getPendingSessions = async (user: DiscordUser) => {
     const pendingSessions = await sessionCollection
         .where('status', '==', SessionStatus.Pending)
         .where('audience', 'array-contains-any', [user, { id: 'no', name: 'audience' }])
-        .orderBy('created')
+        .orderBy('created', 'desc')
         .get();
 
     const sorted = pendingSessions.docs
@@ -166,6 +167,7 @@ export const getSessionHistory = async (user: DiscordUser) => {
             { member: user, hasConnected: true },
         ])
         .orderBy('created', 'desc')
+        .orderBy('status')
         .get();
 
     return userHistory.docs.map((e) => ({ id: e.id, ...e.data().serialize() }));

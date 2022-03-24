@@ -90,18 +90,6 @@ describe('Session class', () => {
                 { id: 'def', name: 'def' },
             ],
         );
-        expect(g.serialize()).toEqual({
-            _id: 'randomId',
-            status: SessionStatus.Cancelled,
-            owner: shellOwner,
-            channel: shellChannel,
-            target: 12,
-            audience: [
-                { id: 'abc', name: 'abc' },
-                { id: 'def', name: 'def' },
-            ],
-            squad: [{ member: { id: 'memba', name: 'memba' }, hasConnected: true }],
-            others: [],
-        });
+        expect(g.serialize()).toMatchSnapshot();
     });
 });

@@ -1,0 +1,44 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Session class serializes the object correctly 1`] = `
+Object {
+  "audience": Array [
+    Object {
+      "id": "abc",
+      "name": "abc",
+    },
+    Object {
+      "id": "def",
+      "name": "def",
+    },
+  ],
+  "channel": Object {
+    "channel": Object {
+      "id": "somechannel",
+      "name": "somechannel",
+    },
+    "server": Object {
+      "id": "someserver",
+      "name": "someserver",
+    },
+    "serverChannelId": "abc",
+  },
+  "created": 2022-03-24T13:14:46.612Z,
+  "others": Array [],
+  "owner": Object {
+    "id": "owner",
+    "name": "owner",
+  },
+  "squad": Array [
+    Object {
+      "hasConnected": true,
+      "member": Object {
+        "id": "memba",
+        "name": "memba",
+      },
+    },
+  ],
+  "status": 2,
+  "target": 12,
+}
+`;

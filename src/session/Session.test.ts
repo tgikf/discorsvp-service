@@ -89,6 +89,7 @@ describe('Session class', () => {
                 { id: 'abc', name: 'abc' },
                 { id: 'def', name: 'def' },
             ],
+            new Date(1648128592493),
         );
         expect(g.serialize()).toMatchSnapshot();
     });

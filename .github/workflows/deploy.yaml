@@ -12,10 +12,10 @@ jobs:
     - uses: actions/setup-node@v2
       with:
         node-version: '16'
-        cache: 'yarn'
-    - run: yarn install
-    - run: yarn test
-    - run: yarn build
+        cache: 'npm'
+    - run: npm install
+    - run: npm test
+    - run: npm run build
     
     - uses: actions/upload-artifact@v3
       with:

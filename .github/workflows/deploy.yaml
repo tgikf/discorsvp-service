@@ -20,8 +20,9 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         path: |
-        dist
-        package.json
+          dist/
+          package.json
+          app.yaml
         
 
   deploy:

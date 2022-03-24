@@ -5,7 +5,8 @@
     "main": "dist/app.js",
     "scripts": {
         "dev": "tsc --build && node -r dotenv/config dist/src/app.js",
-        "start": "npm i && tsc --build && node dist/src/app.js",
+        "build": "tsc --build",
+        "start": "node dist/src/app.js",
         "lint": "npx eslint --cache \"**/*.{js,ts}\" --fix",
         "test": "jest --watchAll --collectCoverage --testTimeout=10000"
     },

@@ -4,13 +4,33 @@ on:
         branches:
             - main
 jobs:
-    build:
-        name: GAE Deploy
-        runs-on: ubuntu-latest
-        steps:
-            - uses: 'actions/checkout@v3'
-            - uses: 'google-github-actions/auth@v0'
-              with:
-                  credentials_json: ${{ secrets.gcp_credentials }}
-            - uses: 'google-github-actions/deploy-appengine@v0'
+  build_and_test:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v2
+    with:
+        node-version: '16'
+        cache: 'yarn'
+    - run: yarn install
+    - run: yarn test
+    - run: yarn build
+    
+    - uses: actions/upload-artifact@v3
+    with:
+        path: |
+        dist
+        package.json
+        app.yaml
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+      - uses: google-github-actions/auth@v0
+      with:
+        credentials_json: ${{ secrets.gcp_credentials }}
+      - uses: 'google-github-actions/deploy-appengine@v0'
 

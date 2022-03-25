@@ -33,7 +33,9 @@ jobs:
       - uses: actions/download-artifact@v3
       - run: ls -a
       - run: pwd
-      - run: cp /artifacts/dist .
+      - run: cp /artifact/package.json .
+      - run: cp /artifact/app.yaml .
+      - run: cp /artifact/dist .
       - run: ls -a
       - uses: google-github-actions/auth@v0
         with:

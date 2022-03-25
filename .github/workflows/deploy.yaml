@@ -32,7 +32,8 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
       - run: ls -a
-      - run: unzip artifact
+      - run: cwd
+      - run: cp /artifacts/dist .
       - run: ls -a
       - uses: google-github-actions/auth@v0
         with:

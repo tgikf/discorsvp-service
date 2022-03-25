@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "npx ts-node -r dotenv/config ./src/app.ts",
         "build": "tsc --build",
-        "start": "node dist/src/app.js",
+        "start": "node -r dotenv/config dist/src/app.js",
         "lint": "npx eslint --cache \"**/*.{js,ts}\" --fix",
         "test": "jest --watchAll --collectCoverage --testTimeout=10000"
     },
@@ -17,7 +17,6 @@
         "@types/jsonwebtoken": "^8.5.8",
         "@typescript-eslint/eslint-plugin": "^5.11.0",
         "@typescript-eslint/parser": "^5.11.0",
-        "dotenv": "^16.0.0",
         "eslint": "^7.32.0",
         "eslint-config-airbnb-base": "^15.0.0",
         "eslint-config-airbnb-typescript": "^16.1.0",
@@ -29,6 +28,7 @@
         "ts-jest": "^27.0.3"
     },
     "dependencies": {
+        "dotenv": "^16.0.0",
         "discord.js": "^12.5.3",
         "firebase-admin": "^10.0.2",
         "jsonwebtoken": "^8.5.1",

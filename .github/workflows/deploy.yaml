@@ -3,7 +3,21 @@ on:
     push:
         branches:
             - main
+            
 jobs:
+  create-envfile:
+    runs-on: ubuntu-latest
+ 
+    steps:
+    - name: Create dotenv file
+      uses: SpicyPizza/create-envfile@v1.3
+      with:
+        envkey_DISC_TOKEN: ${{ secrets.DISC_TOKEN }}
+        envkey_AUTH0_SECRET: ${{ secrets.AUTH0_SECRET }}
+        envkey_AUTH0_CLIENT_ID: ${{ secrets.envkey_AUTH0_CLIENT_ID }}
+        envkey_AUTH0_ISSUER_BASE: https://gizzz-service.eu.auth0.com
+        file_name: .env
+        fail_on_empty: true
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -23,11 +37,9 @@ jobs:
           dist/
           package.json
           app.yaml
-        
-
   deploy:
     name: Deploy
-    needs: build
+    needs: [build, create-envfile]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3

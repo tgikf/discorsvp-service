@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "npx ts-node -r dotenv/config ./src/app.ts",
         "build": "tsc --build",
-        "start": "pwd && ls -a && node -r dotenv/config /dist/src/app.js",
+        "start": "node -r dotenv/config ./dist/app.js",
         "lint": "npx eslint --cache \"**/*.{js,ts}\" --fix",
         "test": "jest --watchAll --collectCoverage --testTimeout=10000"
     },

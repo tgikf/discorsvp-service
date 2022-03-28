@@ -14,6 +14,7 @@ import {
 } from './model/sessionEvents';
 import DiscChannel from './discord/types/DiscChannel';
 import SessionAction from './session/types/SessionAction';
+import { persistDeviceToken } from './model/deviceEvents';
 
 const sockets = new Map<string, Socket>();
 const httpServer = createServer();
@@ -37,21 +38,32 @@ io.engine.on('connection_error', (err: any) => {
 });
 
 io.use(async (socket, next) => {
-    const token = socket.handshake.headers.authorization;
-    if (token) {
+    const authToken = socket.handshake.headers.authorization;
+    if (authToken) {
         try {
-            const decoded = await validateTokenSignature(token);
+            const decoded = await validateTokenSignature(authToken);
             if (decoded) {
                 const discUserId = decoded.sub.split('|')[2];
                 // eslint-disable-next-line no-param-reassign
                 socket.data.user = discUserId;
+                
+                const deviceToken = socket.handshake.headers.device as string;
+                if (deviceToken) {
+                    try {
+                        await persistDeviceToken({ id: discUserId }, deviceToken);
+                    } catch (err: any) {
+                        next(err);
+                    }
+                } else {
+                    next(Error('Device token missing'));
+                }
                 next();
             }
         } catch (err: any) {
             next(err);
         }
     } else {
-        next(Error('Token missing'));
+        next(Error('Auth token missing'));
     }
 });
 

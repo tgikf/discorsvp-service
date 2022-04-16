@@ -1,6 +1,5 @@
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
-import Session from './session/Session';
 import validateTokenSignature from './common/auth';
 import DiscordBot from './discord/DiscordBot';
 import {
@@ -15,6 +14,7 @@ import {
 import DiscChannel from './discord/types/DiscChannel';
 import SessionAction from './session/types/SessionAction';
 import { persistDeviceToken } from './model/deviceEvents';
+import { EmitSessionUpdateEvent } from './types/EmitSessionUpdateEvent';
 
 const sockets = new Map<string, Socket>();
 const httpServer = createServer();
@@ -25,10 +25,12 @@ const io = new Server(httpServer, {
     allowEIO3: true,
 });
 
-const emitSessionUpdateEvent = (sessionId: string, session: Session) => {
+const emitSessionUpdateEvent: EmitSessionUpdateEvent = (user, sessionId, session, eventType) => {
     Array.from(sockets.keys()).forEach((client) => {
         sockets.get(client)?.emit('SessionUpdate', JSON.stringify({ id: sessionId, ...session.serialize() }));
     });
+    // implement push broadcasting
+    console.log(user, eventType);
 };
 
 const bot = new DiscordBot(updateSessionModelOnDiscordEvent, emitSessionUpdateEvent);
@@ -46,7 +48,7 @@ io.use(async (socket, next) => {
                 const discUserId = decoded.sub.split('|')[2];
                 // eslint-disable-next-line no-param-reassign
                 socket.data.user = discUserId;
-                
+
                 const deviceToken = socket.handshake.headers.device as string;
                 if (deviceToken) {
                     try {

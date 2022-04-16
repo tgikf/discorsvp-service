@@ -2,13 +2,14 @@ import DiscChannel from '../discord/types/DiscChannel';
 import Session from '../session/Session';
 import DiscordUser from '../session/types/DiscordUser';
 import SessionStatus from '../session/types/SessionStatus';
+import { EmitSessionUpdateEvent, SessionEventType } from '../types/EmitSessionUpdateEvent';
 import { sessionCollection } from './connection';
 
 export const updateSessionModelOnDiscordEvent = async (
     user: DiscordUser,
     join: boolean,
     channel: DiscChannel,
-    emitEventCallback: (sessionId: string, stringsession: Session) => void,
+    emitEventCallback: EmitSessionUpdateEvent,
 ) => {
     const channelSession = await sessionCollection
         .where('channel.serverChannelId', '==', channel.serverChannelId)
@@ -16,15 +17,17 @@ export const updateSessionModelOnDiscordEvent = async (
         .get();
     if (!channelSession.empty) {
         const session = channelSession.docs[0].data();
+        let event = SessionEventType.None;
         if (session.isSquadMember(user)) {
             session.updateSquadMember(user, join);
+            event = join ? SessionEventType.Connect : SessionEventType.Disconnect;
         } else if (join) {
             session.addOthersMember(user);
         } else {
             session.removeOthersMember(user);
         }
         await sessionCollection.doc(channelSession.docs[0].id).set(session);
-        emitEventCallback(channelSession.docs[0].id, session);
+        emitEventCallback(user, channelSession.docs[0].id, session, event);
     }
 };
 
@@ -34,7 +37,7 @@ export const createSession = async (
     target: number,
     squad: { member: DiscordUser; hasConnected: boolean }[],
     others: DiscordUser[],
-    emitEventCallback: (sessionId: string, stringsession: Session) => void,
+    emitEventCallback: EmitSessionUpdateEvent,
     audience?: DiscordUser[],
 ) => {
     const pendingSessionOwner = await sessionCollection
@@ -52,7 +55,7 @@ export const createSession = async (
         if (pendingSessionChannel.empty) {
             const session = new Session(SessionStatus.Pending, owner, channel, target, squad, others, audience);
             const res = await sessionCollection.add(session);
-            emitEventCallback(res.id, session);
+            emitEventCallback(owner, res.id, session, SessionEventType.Create);
             return res.id;
         }
         throw Error('Channel already has a pending session.');
@@ -61,11 +64,7 @@ export const createSession = async (
     }
 };
 
-export const joinSquad = async (
-    user: DiscordUser,
-    sessionId: string,
-    emitEventCallback: (sessionId: string, stringsession: Session) => void,
-) => {
+export const joinSquad = async (user: DiscordUser, sessionId: string, emitEventCallback: EmitSessionUpdateEvent) => {
     const sessionResult = await sessionCollection.doc(sessionId).get();
     if (sessionResult.exists) {
         const pendingSessionUser = await sessionCollection
@@ -83,7 +82,7 @@ export const joinSquad = async (
         ) {
             session.addSquadMember(user);
             await sessionCollection.doc(sessionId).set(session);
-            emitEventCallback(sessionId, session);
+            emitEventCallback(user, sessionId, session, SessionEventType.Join);
             return true;
         }
         throw Error('Squad join failure: user not eligible');
@@ -91,18 +90,14 @@ export const joinSquad = async (
     throw Error('Squad join failure: session not found');
 };
 
-export const leaveSquad = async (
-    user: DiscordUser,
-    sessionId: string,
-    emitEventCallback: (sessionId: string, stringsession: Session) => void,
-) => {
+export const leaveSquad = async (user: DiscordUser, sessionId: string, emitEventCallback: EmitSessionUpdateEvent) => {
     const sessionResult = await sessionCollection.doc(sessionId).get();
     if (sessionResult.exists) {
         const session = sessionResult.data();
         if (session && session.isPending && session.isSquadMember(user)) {
             session.removeSquadMember(user);
             await sessionCollection.doc(sessionId).set(session);
-            emitEventCallback(sessionId, session);
+            emitEventCallback(user, sessionId, session, SessionEventType.Leave);
             return true;
         }
         throw Error('Squad leave failure: user not eligible');
@@ -113,7 +108,7 @@ export const leaveSquad = async (
 export const cancelSession = async (
     user: DiscordUser,
     sessionId: string,
-    emitEventCallback: (sessionId: string, stringsession: Session) => void,
+    emitEventCallback: EmitSessionUpdateEvent,
 ) => {
     const sessionResult = await sessionCollection.doc(sessionId).get();
     if (sessionResult.exists) {
@@ -121,7 +116,7 @@ export const cancelSession = async (
         if (session && session.isPending && session.owner.id === user.id) {
             session.status = SessionStatus.Cancelled;
             await sessionCollection.doc(sessionId).set(session);
-            emitEventCallback(sessionId, session);
+            emitEventCallback(user, sessionId, session, SessionEventType.Cancel);
             return true;
         }
         throw Error('Session cancellation failure: session or user invalid');

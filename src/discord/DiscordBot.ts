@@ -1,6 +1,6 @@
 import Discord, { Channel, VoiceChannel } from 'discord.js';
-import Session from '../session/Session';
 import DiscordUser from '../session/types/DiscordUser';
+import { EmitSessionUpdateEvent } from '../types/EmitSessionUpdateEvent';
 import DiscChannel from './types/DiscChannel';
 
 export default class DiscordBot {
@@ -16,9 +16,9 @@ export default class DiscordBot {
             user: DiscordUser,
             join: boolean,
             channel: DiscChannel,
-            emitSessionUpdateEvent: (sessionId: string, session: Session) => void,
+            emitSessionUpdateEvent: EmitSessionUpdateEvent,
         ) => void,
-        emitSessionUpdateEvent: (sessionId: string, session: Session) => void,
+        emitSessionUpdateEvent: EmitSessionUpdateEvent,
     ) {
         this.client.login(process.env.DISC_TOKEN);
 

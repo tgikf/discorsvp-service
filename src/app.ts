@@ -15,6 +15,7 @@ import DiscChannel from './discord/types/DiscChannel';
 import SessionAction from './session/types/SessionAction';
 import { persistDeviceToken } from './model/deviceEvents';
 import { EmitSessionUpdateEvent } from './types/EmitSessionUpdateEvent';
+import broadcastEventPush from './common/notification';
 
 const sockets = new Map<string, Socket>();
 const httpServer = createServer();
@@ -29,8 +30,7 @@ const emitSessionUpdateEvent: EmitSessionUpdateEvent = (user, sessionId, session
     Array.from(sockets.keys()).forEach((client) => {
         sockets.get(client)?.emit('SessionUpdate', JSON.stringify({ id: sessionId, ...session.serialize() }));
     });
-    // implement push broadcasting
-    console.log(user, eventType);
+    broadcastEventPush(user, sessionId, session.serialize(), eventType);
 };
 
 const bot = new DiscordBot(updateSessionModelOnDiscordEvent, emitSessionUpdateEvent);

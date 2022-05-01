@@ -3,7 +3,7 @@ import Session from '../session/Session';
 import DiscordUser from '../session/types/DiscordUser';
 import SessionStatus from '../session/types/SessionStatus';
 import { EmitSessionUpdateEvent, SessionEventType } from '../types/EmitSessionUpdateEvent';
-import { sessionCollection } from './connection';
+import { sessionCollection } from '../firebase/connection';
 
 export const updateSessionModelOnDiscordEvent = async (
     user: DiscordUser,

@@ -1,5 +1,6 @@
 import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getMessaging } from 'firebase-admin/messaging';
 import Session from '../session/Session';
 
 initializeApp({
@@ -16,3 +17,5 @@ const converter = {
 
 export const sessionCollection = getFirestore().collection('sessions').withConverter(converter);
 export const deviceCollection = getFirestore().collection('devices');
+export const rootFirestore = getFirestore();
+export const cloudMessaging = getMessaging();

@@ -1,6 +1,7 @@
 runtime: nodejs16
+
 handlers:
 - url: /.*
   script: auto
-  http_headers:
+  http_headers: 
     Access-Control-Allow-Origin: "*"

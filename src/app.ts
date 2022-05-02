@@ -162,5 +162,4 @@ io.on('connection', async (socket: Socket) => {
 });
 
 httpServer.listen(3000);
-
-export default emitSessionUpdateEvent;
+console.log('Listening on port 3000', httpServer.address());

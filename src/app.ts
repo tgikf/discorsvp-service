@@ -161,5 +161,5 @@ io.on('connection', async (socket: Socket) => {
     );
 });
 
-httpServer.listen(8080);
-console.log('Listening on port 8080', httpServer.address());
+httpServer.listen(3000);
+console.log('Listening on port 3000', httpServer.address());

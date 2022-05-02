@@ -11,5 +11,5 @@ manual_scaling:
 network:
   session_affinity: true
   forwarded_ports: 
-  - 8080
+  - 3000
 # [END appengine_websockets_yaml]

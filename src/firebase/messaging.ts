@@ -1,8 +1,8 @@
 import { cloudMessaging } from './connection';
 
 const sendPush = async (messageText: string, targetDevices: string[]) => {
+
     if (targetDevices.length === 0) return;
-    console.log(`Push triggered ${messageText}, for ${targetDevices}`);
 
     const message = {
         notification: {

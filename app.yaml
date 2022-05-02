@@ -1,11 +1,7 @@
 runtime: nodejs
-env: flex
-automatic_scaling:
-  min_num_instances: 1
-  max_num_instances: 1
-  cool_down_period_sec: 180
-  cpu_utilization:
-    target_utilization: 0.6
-  target_concurrent_requests: 100
+vm: true
+
 network:
- session_affinity: true
+  forwarded_ports:
+  - 65080
+  instance_tag: websocket

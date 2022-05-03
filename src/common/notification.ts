@@ -13,14 +13,14 @@ const broadcastEventPush = async (
     switch (eventType) {
         case SessionEventType.Create: {
             const message = `${user.name} is gathering a squad in ${session.channel.channel.name} on ${session.channel.server.name}. RSVP now!`;
-            const audience = await getDeviceTokens();
+            const audience = await getDeviceTokens([], [user]);
             sendPush(message, audience);
             return;
         }
         case SessionEventType.Complete: {
             const message = `Your squad in ${session.channel.channel.name} on ${session.channel.server.name} is ready to go!`;
             const audience = await getDeviceTokens(
-                session.squad.map((e) => ({ name: e.member.name, id: e.member.id })),
+                session.squad.map((e) => ({ id: e.member.id, name: e.member.name }), [user]),
             );
             sendPush(message, audience);
             return;
@@ -28,9 +28,7 @@ const broadcastEventPush = async (
         case SessionEventType.Join: {
             const message = `${user.name} has joined your squad in ${session.channel.channel.name} on ${session.channel.server.name}!`;
             const audience = await getDeviceTokens(
-                session.squad
-                    .filter((e) => e.member.id !== user.id)
-                    .map((e) => ({ name: e.member.name, id: e.member.id })),
+                session.squad.map((e) => ({ id: e.member.id, name: e.member.name }), [user]),
             );
             sendPush(message, audience);
             return;
@@ -38,9 +36,7 @@ const broadcastEventPush = async (
         case SessionEventType.Leave: {
             const message = `${user.name} has left your squad in ${session.channel.channel.name} on ${session.channel.server.name}!`;
             const audience = await getDeviceTokens(
-                session.squad
-                    .filter((e) => e.member.id !== user.id)
-                    .map((e) => ({ name: e.member.name, id: e.member.id })),
+                session.squad.map((e) => ({ id: e.member.id, name: e.member.name }), [user]),
             );
             sendPush(message, audience);
             return;
@@ -48,9 +44,7 @@ const broadcastEventPush = async (
         case SessionEventType.Connect: {
             const message = `Your squadmember ${user.name} has connected to ${session.channel.channel.name} on ${session.channel.server.name}.`;
             const audience = await getDeviceTokens(
-                session.squad
-                    .filter((e) => e.member.id !== user.id)
-                    .map((e) => ({ name: e.member.name, id: e.member.id })),
+                session.squad.map((e) => ({ id: e.member.id, name: e.member.name }), [user]),
             );
             sendPush(message, audience);
             return;
@@ -58,9 +52,7 @@ const broadcastEventPush = async (
         case SessionEventType.Disconnect: {
             const message = `Your squadmember ${user.name} has disconnected from ${session.channel.channel.name} on ${session.channel.server.name}.`;
             const audience = await getDeviceTokens(
-                session.squad
-                    .filter((e) => e.member.id !== user.id)
-                    .map((e) => ({ name: e.member.name, id: e.member.id })),
+                session.squad.map((e) => ({ id: e.member.id, name: e.member.name }), [user]),
             );
             sendPush(message, audience);
             return;
@@ -68,9 +60,7 @@ const broadcastEventPush = async (
         case SessionEventType.Cancel: {
             const message = `${user.name} has cancelled the session in ${session.channel.channel.name} on ${session.channel.server.name}.`;
             const audience = await getDeviceTokens(
-                session.squad
-                    .filter((e) => e.member.id !== user.id)
-                    .map((e) => ({ name: e.member.name, id: e.member.id })),
+                session.squad.map((e) => ({ id: e.member.id, name: e.member.name }), [user]),
             );
             sendPush(message, audience);
             return;

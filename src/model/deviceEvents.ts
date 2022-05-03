@@ -5,16 +5,19 @@ export const persistDeviceToken = async (user: DiscordUser, token: string) => {
     await deviceCollection.doc(user.id).set({ token });
 };
 
-export const getDeviceToken = async (user: DiscordUser) => (await deviceCollection.doc(user.id).get()).data();
+export const getDeviceTokens = async (include: DiscordUser[], exclude?: DiscordUser[]) => {
+    const excludeIds = exclude?.map((e) => e.id);
+    const includeIds = include
+        .filter((e) => !excludeIds?.includes(e.id))
+        .map((e) => rootFirestore.doc(`devices/${e.id}`));
 
-export const getDeviceTokens = async (users?: DiscordUser[]) => {
-    if (users && users.length > 0) {
-        console.log('users:', users);
-        const snapshot = await rootFirestore.getAll(...users.map((u) => rootFirestore.doc(`devices/${u.id}`)));
-        return snapshot.map((doc) => {
-            console.log(doc.data());
-            return doc.data()?.token;
-        });
+    // fetch requested tokens
+    if (includeIds.length > 0) {
+        const snapshot = await rootFirestore.getAll(...includeIds);
+        return snapshot.map((doc) => doc.data()?.token);
     }
-    return (await deviceCollection.get()).docs.map((doc) => doc.data()?.token);
+    // fetch all tokens and exclude unwanted ones
+    return (await deviceCollection.get()).docs
+        .filter((doc) => !excludeIds?.includes(doc.id))
+        .map((doc) => doc.data()?.token);
 };

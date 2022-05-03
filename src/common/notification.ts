@@ -20,7 +20,7 @@ const broadcastEventPush = async (
         case SessionEventType.Complete: {
             const message = `Your squad in ${session.channel.channel.name} on ${session.channel.server.name} is ready to go!`;
             const audience = await getDeviceTokens(
-                session.squad.map((e) => ({ id: e.member.id, name: e.member.name }), [user]),
+                session.squad.map((e) => ({ id: e.member.id, name: e.member.name })),
             );
             sendPush(message, audience);
             return;

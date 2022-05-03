@@ -33,6 +33,10 @@ export default class Session {
         return this._squad;
     }
 
+    get target(): number {
+        return this._target;
+    }
+
     get status(): SessionStatus {
         return this._status;
     }

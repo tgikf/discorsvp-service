@@ -78,7 +78,8 @@ export const joinSquad = async (user: DiscordUser, sessionId: string, emitEventC
             session &&
             session.isPending &&
             session.isInAudience(user) &&
-            !session.isSquadMember(user)
+            !session.isSquadMember(user) &&
+            session.squad.length < session.target
         ) {
             session.addSquadMember(user);
             await sessionCollection.doc(sessionId).set(session);

@@ -14,10 +14,11 @@ export const getDeviceTokens = async (include: DiscordUser[], exclude?: DiscordU
     // fetch requested tokens
     if (includeIds.length > 0) {
         const snapshot = await rootFirestore.getAll(...includeIds);
-        return snapshot.map((doc) => doc.data()?.token);
+        return snapshot.map((doc) => doc.data()?.token).filter((token) => token !== undefined);
     }
     // fetch all tokens and exclude unwanted ones
     return (await deviceCollection.get()).docs
         .filter((doc) => !excludeIds?.includes(doc.id))
-        .map((doc) => doc.data()?.token);
+        .map((doc) => doc.data()?.token)
+        .filter((token) => token !== undefined);
 };

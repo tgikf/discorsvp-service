@@ -20,7 +20,13 @@ export const updateSessionModelOnDiscordEvent = async (
         let event = SessionEventType.None;
         if (session.isSquadMember(user)) {
             session.updateSquadMember(user, join);
-            event = join ? SessionEventType.Connect : SessionEventType.Disconnect;
+            if (join && session.isComplete()) {
+                event = SessionEventType.Complete;
+            } else if (join) {
+                event = SessionEventType.Join;
+            } else {
+                event = SessionEventType.Disconnect;
+            }
         } else if (join) {
             session.addOthersMember(user);
         } else {

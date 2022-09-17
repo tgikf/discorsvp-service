@@ -23,7 +23,7 @@ export const updateSessionModelOnDiscordEvent = async (
             if (join && session.isComplete()) {
                 event = SessionEventType.Complete;
             } else if (join) {
-                event = SessionEventType.Join;
+                event = SessionEventType.Connect;
             } else {
                 event = SessionEventType.Disconnect;
             }
@@ -82,7 +82,7 @@ export const joinSquad = async (user: DiscordUser, sessionId: string, emitEventC
         if (
             pendingSessionUser.empty &&
             session &&
-            session.isPending &&
+            session.isPending() &&
             session.isInAudience(user) &&
             !session.isSquadMember(user) &&
             session.squad.length < session.target
@@ -101,7 +101,7 @@ export const leaveSquad = async (user: DiscordUser, sessionId: string, emitEvent
     const sessionResult = await sessionCollection.doc(sessionId).get();
     if (sessionResult.exists) {
         const session = sessionResult.data();
-        if (session && session.isPending && session.isSquadMember(user)) {
+        if (session && session.isPending() && session.isSquadMember(user)) {
             session.removeSquadMember(user);
             await sessionCollection.doc(sessionId).set(session);
             emitEventCallback(user, sessionId, session, SessionEventType.Leave);
@@ -120,7 +120,7 @@ export const cancelSession = async (
     const sessionResult = await sessionCollection.doc(sessionId).get();
     if (sessionResult.exists) {
         const session = sessionResult.data();
-        if (session && session.isPending && session.owner.id === user.id) {
+        if (session && session.isPending() && session.owner.id === user.id) {
             session.status = SessionStatus.Cancelled;
             await sessionCollection.doc(sessionId).set(session);
             emitEventCallback(user, sessionId, session, SessionEventType.Cancel);
